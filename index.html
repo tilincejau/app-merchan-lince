@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Catálogo Merchan - Lince</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- OVERLAY DE LOADING -->
+    <div id="loading-overlay"><div class="spinner"></div><span id="loading-msg">Carregando...</span></div>
+
+    <!-- TELA DE LOGIN -->
+    <div id="tela-login" class="app-container">
+        <div class="card">
+            <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" alt="Logo Lince" class="logo">
+            <div class="desenvolvedor">Sistema de Solicitação de Merchan</div>
+            <h2>Acesso Restrito</h2>
+            <input type="text" id="campo-usuario" class="input-campo" placeholder="Usuário">
+            <input type="password" id="campo-senha" class="input-campo" placeholder="Senha">
+            <button class="btn-principal" onclick="fazerLogin()">Acessar Sistema</button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VISÃO DO VENDEDOR (CATÁLOGO E CARRINHO)    -->
+    <!-- ========================================== -->
+    <div id="tela-vendedor" class="app-container" style="display: none; padding-bottom: 80px;">
+        <div class="header-topo">
+            <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo-pequena">
+            <button class="btn-sair" onclick="sairDoSistema()">Sair</button>
+        </div>
+        
+        <h3 style="margin-bottom: 5px;">Selecione a Marca</h3>
+        
+        <!-- CARROSSEL DE MARCAS ESTILO INSTAGRAM -->
+        <div class="marcas-carousel" id="carrossel-marcas-vendedor">
+            <!-- Preenchido via JS -->
+        </div>
+
+        <h3 style="margin-top: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px;" id="titulo-marca-vendedor">Todos os Materiais</h3>
+        
+        <!-- LISTA DE PRODUTOS -->
+        <div class="grid-produtos" id="grid-produtos-vendedor">
+            <!-- Preenchido via JS -->
+        </div>
+
+        <!-- BOTÃO FLUTUANTE DO CARRINHO -->
+        <div class="btn-carrinho-flutuante" onclick="abrirCarrinho()">
+            🛒 Ver Carrinho (<span id="qtd-carrinho">0</span>)
+        </div>
+    </div>
+
+    <!-- MODAL DO CARRINHO DO VENDEDOR -->
+    <div id="modal-carrinho" class="modal-overlay">
+        <div class="modal-box">
+            <h2 style="margin-top:0;">Seu Pedido</h2>
+            <div id="itens-carrinho">
+                <!-- Preenchido via JS -->
+            </div>
+            <button class="btn-principal" style="margin-top: 20px;" onclick="enviarPedido()">✅ Finalizar Solicitação</button>
+            <button class="btn-secundario" onclick="document.getElementById('modal-carrinho').style.display='none'">Continuar Escolhendo</button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VISÃO DO PROMOTOR (ESTOQUE E PEDIDOS)      -->
+    <!-- ========================================== -->
+    <div id="tela-promotor" class="app-container" style="display: none; padding-bottom: 80px;">
+        <div class="header-topo">
+            <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo-pequena">
+            <button class="btn-sair" onclick="sairDoSistema()">Sair</button>
+        </div>
+
+        <div class="abas">
+            <button class="tab-btn ativo" id="tab-solicitacoes" onclick="mudarAbaPromotor('solicitacoes')">📦 Solicitações</button>
+            <button class="tab-btn" id="tab-estoque" onclick="mudarAbaPromotor('estoque')">📊 Estoque Merchan</button>
+        </div>
+
+        <!-- ABA: SOLICITAÇÕES DOS VENDEDORES -->
+        <div id="aba-solicitacoes">
+            <h3>Pedidos Pendentes de Separação</h3>
+            <div id="lista-pedidos-promotor">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+
+        <!-- ABA: ESTOQUE E CADASTRO -->
+        <div id="aba-estoque" style="display: none;">
+            <button class="btn-sucesso" style="margin-bottom: 15px;" onclick="document.getElementById('modal-novo-material').style.display='flex'">➕ Adicionar Novo Material</button>
+            
+            <h3 style="margin-bottom: 5px;">Filtrar por Marca</h3>
+            <div class="marcas-carousel" id="carrossel-marcas-promotor">
+                <!-- Preenchido via JS -->
+            </div>
+
+            <div class="grid-produtos" id="grid-produtos-promotor">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE NOVO MATERIAL (PROMOTOR) -->
+    <div id="modal-novo-material" class="modal-overlay">
+        <div class="modal-box">
+            <h2 style="margin-top:0;">Cadastrar Merchan</h2>
+            
+            <label class="info-label">Foto do Material (Obrigatório):</label>
+            <input type="file" id="novo-foto" accept="image/*" capture="environment" class="input-campo" onchange="processarFoto(this)">
+            <img id="preview-foto" style="width: 100%; max-height: 150px; object-fit: contain; display: none; margin-bottom: 10px; border-radius: 8px;">
+
+            <label class="info-label">Marca (Heineken, Amstel, FYS...):</label>
+            <input type="text" id="novo-marca" class="input-campo" placeholder="Ex: HEINEKEN">
+
+            <label class="info-label">Seção (Cartaz, Faixa, Display...):</label>
+            <input type="text" id="novo-secao" class="input-campo" placeholder="Ex: CARTAZ">
+
+            <label class="info-label">Descrição do Material:</label>
+            <input type="text" id="novo-desc" class="input-campo" placeholder="Ex: Cartaz Heineken 0.0 40x60">
+
+            <div style="display: flex; gap: 10px;">
+                <div style="flex:1;">
+                    <label class="info-label">Tipo:</label>
+                    <select id="novo-tipo" class="input-campo">
+                        <option value="SEMI">Semi</option>
+                        <option value="LEVE">Leve</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label class="info-label">Qtd Inicial:</label>
+                    <input type="number" id="novo-qtd" class="input-campo" value="1">
+                </div>
+            </div>
+
+            <button class="btn-sucesso" style="margin-top: 10px;" onclick="salvarNovoMaterial()">💾 Salvar Material</button>
+            <button class="btn-secundario" onclick="fecharModalNovoMaterial()">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- MODAL SAÍDA MANUAL DE ESTOQUE (PROMOTOR) -->
+    <div id="modal-saida-manual" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:#dc3545;">Dar Saída Avulsa</h3>
+            <p id="saida-nome-material" style="font-weight:bold;"></p>
+            <input type="hidden" id="saida-id-material">
+            
+            <label class="info-label">Quantidade a retirar:</label>
+            <input type="number" id="saida-qtd" class="input-campo" value="1">
+
+            <button class="btn-principal" style="background: #dc3545;" onclick="registrarSaidaManual()">Confirmar Saída</button>
+            <button class="btn-secundario" onclick="document.getElementById('modal-saida-manual').style.display='none'">Cancelar</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
