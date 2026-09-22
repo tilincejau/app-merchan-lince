@@ -32,22 +32,17 @@
         .btn-secundario { background: #e5e7eb; color: #374151; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
         .btn-sucesso { background: #10b981; color: white; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer; }
 
-        /* HEADER */
         .header-topo { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 15px; }
         .btn-sair { background: #fee2e2; color: #dc2626; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
-        /* CARROSSEL DE MARCAS ESTILO STORIES */
         .marcas-carousel { display: flex; overflow-x: auto; gap: 15px; padding: 5px 0 15px 0; scrollbar-width: none; }
         .marcas-carousel::-webkit-scrollbar { display: none; }
-        .marca-item { min-width: 65px; height: 65px; border-radius: 50%; background: #fff; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-direction: column; transition: 0.2s; }
+        .marca-item { min-width: 65px; height: 65px; border-radius: 50%; background: #fff; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-sizing: border-box; overflow: hidden; padding: 2px; }
         .marca-item.ativa { border-color: var(--cor-primaria); background: #ecfdf5; transform: scale(1.05); }
-        .marca-item img { width: 90%; height: 90%; object-fit: contain; border-radius: 50%; }
-        .marca-nome { font-size: 10px; font-weight: bold; text-align: center; margin-top: 4px; color: #555; }
-
-        /* GRID DE PRODUTOS */
+        
         .grid-produtos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .produto-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .produto-img { width: 100%; height: 100px; object-fit: contain; border-radius: 8px; margin-bottom: 10px; background: #f9fafb; }
+        .produto-img { width: 100%; height: 100px; object-fit: contain; border-radius: 8px; margin-bottom: 10px; background: #fff; }
         .produto-titulo { font-size: 13px; font-weight: bold; color: #333; line-height: 1.2; margin-bottom: 5px; flex-grow: 1; }
         .produto-estoque { font-size: 11px; color: #10b981; font-weight: bold; margin-bottom: 8px; }
         .produto-estoque.baixo { color: #dc2626; }
@@ -57,12 +52,10 @@
         .btn-add { background: var(--cor-primaria); color: #fff; border: none; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .btn-add:disabled { background: #9ca3af; }
 
-        /* ABAS PROMOTOR */
         .abas { display: flex; gap: 10px; margin-bottom: 15px; }
         .tab-btn { flex: 1; background: #e5e7eb; color: #6b7280; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .tab-btn.ativo { background: var(--cor-primaria); color: #fff; }
 
-        /* PEDIDOS PROMOTOR */
         .pedido-card { background: #fff; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
         .pedido-card.separado { border-left-color: #10b981; opacity: 0.7; }
         .pedido-header { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 8px; }
@@ -72,16 +65,13 @@
         .item-desc { font-size: 12px; font-weight: bold; color: #333; flex: 1; }
         .item-qtd { font-size: 14px; font-weight: 900; color: var(--cor-primaria); }
 
-        /* FLOATING CART */
         .btn-carrinho-flutuante { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: #f59e0b; color: white; text-align: center; padding: 15px; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); cursor: pointer; z-index: 100; }
 
-        /* MODAL */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 999; padding: 15px; }
         .modal-box { background: white; padding: 25px; border-radius: 16px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; }
         .carrinho-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #ccc; }
         .carrinho-remover { color: #dc2626; cursor: pointer; font-weight: bold; font-size: 12px; }
 
-        /* LOADING */
         #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; font-weight: bold; color: var(--cor-primaria); }
         .spinner { border: 4px solid rgba(0,0,0,0.1); border-left-color: var(--cor-primaria); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -89,10 +79,8 @@
 </head>
 <body>
 
-    <!-- OVERLAY DE LOADING -->
     <div id="loading-overlay"><div class="spinner"></div><span id="loading-msg">Carregando...</span></div>
 
-    <!-- TELA DE LOGIN -->
     <div id="tela-login" class="app-container">
         <div class="card">
             <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" alt="Logo Lince" class="logo">
@@ -104,9 +92,6 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- VISÃO DO VENDEDOR (CATÁLOGO E CARRINHO)    -->
-    <!-- ========================================== -->
     <div id="tela-vendedor" class="app-container" style="display: none; padding-bottom: 80px;">
         <div class="header-topo">
             <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo-pequena">
@@ -114,40 +99,25 @@
         </div>
         
         <h3 style="margin-bottom: 5px;">Selecione a Marca</h3>
-        
-        <!-- CARROSSEL DE MARCAS ESTILO INSTAGRAM -->
-        <div class="marcas-carousel" id="carrossel-marcas-vendedor">
-            <!-- Preenchido via JS -->
-        </div>
+        <div class="marcas-carousel" id="carrossel-marcas-vendedor"></div>
 
         <h3 style="margin-top: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px;" id="titulo-marca-vendedor">Todos os Materiais</h3>
-        
-        <!-- LISTA DE PRODUTOS -->
-        <div class="grid-produtos" id="grid-produtos-vendedor">
-            <!-- Preenchido via JS -->
-        </div>
+        <div class="grid-produtos" id="grid-produtos-vendedor"></div>
 
-        <!-- BOTÃO FLUTUANTE DO CARRINHO -->
         <div class="btn-carrinho-flutuante" onclick="abrirCarrinho()">
             🛒 Ver Carrinho (<span id="qtd-carrinho">0</span>)
         </div>
     </div>
 
-    <!-- MODAL DO CARRINHO DO VENDEDOR -->
     <div id="modal-carrinho" class="modal-overlay">
         <div class="modal-box">
             <h2 style="margin-top:0;">Seu Pedido</h2>
-            <div id="itens-carrinho">
-                <!-- Preenchido via JS -->
-            </div>
+            <div id="itens-carrinho"></div>
             <button class="btn-principal" style="margin-top: 20px;" onclick="enviarPedido()">✅ Finalizar Solicitação</button>
             <button class="btn-secundario" onclick="document.getElementById('modal-carrinho').style.display='none'">Continuar Escolhendo</button>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- VISÃO DO PROMOTOR (ESTOQUE E PEDIDOS)      -->
-    <!-- ========================================== -->
     <div id="tela-promotor" class="app-container" style="display: none; padding-bottom: 80px;">
         <div class="header-topo">
             <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo-pequena">
@@ -159,30 +129,21 @@
             <button class="tab-btn" id="tab-estoque" onclick="mudarAbaPromotor('estoque')">📊 Estoque Merchan</button>
         </div>
 
-        <!-- ABA: SOLICITAÇÕES DOS VENDEDORES -->
         <div id="aba-solicitacoes">
             <h3>Pedidos Pendentes de Separação</h3>
-            <div id="lista-pedidos-promotor">
-                <!-- Preenchido via JS -->
-            </div>
+            <div id="lista-pedidos-promotor"></div>
         </div>
 
-        <!-- ABA: ESTOQUE E CADASTRO -->
         <div id="aba-estoque" style="display: none;">
             <button class="btn-sucesso" style="margin-bottom: 15px;" onclick="document.getElementById('modal-novo-material').style.display='flex'">➕ Adicionar Novo Material</button>
             
             <h3 style="margin-bottom: 5px;">Filtrar por Marca</h3>
-            <div class="marcas-carousel" id="carrossel-marcas-promotor">
-                <!-- Preenchido via JS -->
-            </div>
+            <div class="marcas-carousel" id="carrossel-marcas-promotor"></div>
 
-            <div class="grid-produtos" id="grid-produtos-promotor">
-                <!-- Preenchido via JS -->
-            </div>
+            <div class="grid-produtos" id="grid-produtos-promotor"></div>
         </div>
     </div>
 
-    <!-- MODAL DE NOVO MATERIAL (PROMOTOR) -->
     <div id="modal-novo-material" class="modal-overlay">
         <div class="modal-box">
             <h2 style="margin-top:0;">Cadastrar Merchan</h2>
@@ -191,7 +152,7 @@
             <input type="file" id="novo-foto" accept="image/*" capture="environment" class="input-campo" onchange="processarFoto(this)">
             <img id="preview-foto" style="width: 100%; max-height: 150px; object-fit: contain; display: none; margin-bottom: 10px; border-radius: 8px;">
 
-            <label class="info-label">Marca (Heineken, Amstel, FYS...):</label>
+            <label class="info-label">Marca (Ex: HEINEKEN, AMSTEL...):</label>
             <input type="text" id="novo-marca" class="input-campo" placeholder="Ex: HEINEKEN">
 
             <label class="info-label">Seção (Cartaz, Faixa, Display...):</label>
@@ -219,7 +180,6 @@
         </div>
     </div>
 
-    <!-- MODAL SAÍDA MANUAL DE ESTOQUE (PROMOTOR) -->
     <div id="modal-saida-manual" class="modal-overlay">
         <div class="modal-box">
             <h3 style="margin-top:0; color:#dc3545;">Dar Saída Avulsa</h3>
@@ -235,15 +195,25 @@
     </div>
 
     <script>
-        // ⚠️ ATENÇÃO: NÃO ESQUEÇA DE COLAR O LINK DO SEU GOOGLE APPS SCRIPT AQUI ⚠️
-        const API_URL = "https://script.google.com/macros/s/AKfycbxaplwwa6WYhrjTjcaXq8O7iA5o5abzmBnsNz1mnNoqL9_8Dx3cGak4TFYTb85W6xTq1w/exec"; 
+        // ⚠️ ATENÇÃO: NÃO ESQUEÇA DE COLAR O LINK DO SEU GOOGLE APPS SCRIPT (NOVA IMPLANTAÇÃO) AQUI:
+        const API_URL = "SEU_LINK_DO_APPS_SCRIPT_AQUI"; 
 
-        let bd = { materiais: [], pedidos: [] };
+        let bd = { materiais: [], pedidos: [], marcas: [] };
         let usuarioLogado = {};
         let carrinho = [];
         let fotoB64 = "";
-        let marcaAtivaVendedor = "";
-        let marcaAtivaPromotor = "";
+
+        // =========================================
+        // TRADUTOR DE LINK DO GOOGLE DRIVE PARA IMG
+        // =========================================
+        function getDirectImageUrl(url) {
+            if (!url) return 'https://via.placeholder.com/150?text=Sem+Foto';
+            let matchD = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (matchD) return `https://lh3.googleusercontent.com/d/${matchD[1]}`;
+            let matchId = url.match(/id=([a-zA-Z0-9_-]+)/);
+            if (matchId) return `https://lh3.googleusercontent.com/d/${matchId[1]}`;
+            return url;
+        }
 
         function mostrarLoading(msg) {
             document.getElementById('loading-msg').innerText = msg;
@@ -321,11 +291,19 @@
             let html = "";
             
             marcas.forEach(marca => {
+                let marcaObj = bd.marcas.find(m => m.marca === marca);
+                let logoUrl = marcaObj && marcaObj.logo ? getDirectImageUrl(marcaObj.logo) : null;
+                
+                let conteudoMarca = "";
+                if (logoUrl) {
+                    conteudoMarca = `<img src="${logoUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                } else {
+                    conteudoMarca = `<span style="font-size:10px; font-weight:bold; color:#555; text-align:center;">${marca}</span>`;
+                }
+
                 html += `
                 <div class="marca-item" id="marca-${perfil}-${marca}" onclick="selecionarMarca('${marca}', '${perfil}')">
-                    <div style="width: 50px; height: 50px; border-radius: 50%; background: #eee; display: flex; align-items:center; justify-content:center; overflow:hidden;">
-                        <span style="font-size:10px; font-weight:bold; color:#555; text-align:center;">${marca}</span>
-                    </div>
+                    ${conteudoMarca}
                 </div>`;
             });
 
@@ -348,24 +326,19 @@
 
             if(perfil === 'VENDEDOR') {
                 document.getElementById('titulo-marca-vendedor').innerText = `Materiais: ${marca}`;
-                marcaAtivaVendedor = marca;
                 renderizarProdutosVendedor(filtrados, container);
             } else {
-                marcaAtivaPromotor = marca;
                 renderizarProdutosPromotor(filtrados, container);
             }
         }
 
-        // ==========================================
-        // FUNÇÕES DO VENDEDOR
-        // ==========================================
         function renderizarProdutosVendedor(produtos, container) {
             let html = "";
             if(produtos.length === 0) html = "<p>Nenhum material nesta marca.</p>";
             
             produtos.forEach(p => {
                 let maxQtd = parseInt(p.estoque) || 0;
-                let img = p.foto ? p.foto : 'https://via.placeholder.com/150?text=Sem+Foto';
+                let img = p.foto ? getDirectImageUrl(p.foto) : 'https://via.placeholder.com/150?text=Sem+Foto';
                 
                 let botaoAdicionar = "";
                 if(maxQtd > 0) {
@@ -466,7 +439,7 @@
                     carrinho = [];
                     atualizarCarrinhoUI();
                     document.getElementById('modal-carrinho').style.display = 'none';
-                    carregarDados(); // Recarrega para atualizar estoque na tela
+                    carregarDados(); 
                 } else { alert("Erro: " + res.erro); }
             } catch(e) { alert("Erro ao conectar."); }
             
@@ -474,9 +447,6 @@
             document.querySelector('#modal-carrinho .btn-principal').disabled = false;
         }
 
-        // ==========================================
-        // FUNÇÕES DO PROMOTOR
-        // ==========================================
         function mudarAbaPromotor(aba) {
             document.getElementById('aba-solicitacoes').style.display = 'none';
             document.getElementById('aba-estoque').style.display = 'none';
@@ -506,7 +476,7 @@
                     let itensArray = JSON.parse(p.resumo_itens);
                     itensArray.forEach(item => {
                         let prodInfo = bd.materiais.find(m => m.id === item.id) || {};
-                        let img = prodInfo.foto || 'https://via.placeholder.com/150?text=S/F';
+                        let img = prodInfo.foto ? getDirectImageUrl(prodInfo.foto) : 'https://via.placeholder.com/150?text=S/F';
                         itensHtml += `
                         <div class="item-pedido">
                             <img src="${img}">
@@ -542,14 +512,10 @@
                 let res = await req.json();
 
                 if(res.sucesso) {
-                    // Remove da tela
                     document.getElementById(`pedido-${idPedido}`).remove();
-                    
-                    // Atualiza BD local
                     let p = bd.pedidos.find(x => x.id_pedido === idPedido);
                     if(p) p.status = 'SEPARADO';
                     
-                    // Dispara WhatsApp
                     if(telefone) {
                         let msg = `Olá! Seus materiais de Merchandising (Pedido ${idPedido}) já estão separados e prontos para retirada com o Promotor.`;
                         let linkZap = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
@@ -565,7 +531,7 @@
             if(produtos.length === 0) html = "<p>Nenhum material nesta marca.</p>";
             
             produtos.forEach(p => {
-                let img = p.foto ? p.foto : 'https://via.placeholder.com/150?text=Sem+Foto';
+                let img = p.foto ? getDirectImageUrl(p.foto) : 'https://via.placeholder.com/150?text=Sem+Foto';
                 html += `
                 <div class="produto-card">
                     <img src="${img}" class="produto-img">
@@ -578,9 +544,6 @@
             container.innerHTML = html;
         }
 
-        // ==========================================
-        // CADASTRO DE MATERIAL E FOTOS (PROMOTOR)
-        // ==========================================
         function processarFoto(input) {
             if (!input.files[0]) return; 
             let file = input.files[0];
@@ -590,7 +553,7 @@
                 let img = new Image();
                 img.onload = function() {
                     let canvas = document.createElement('canvas');
-                    let MAX_WIDTH = 800; // Comprime largura p/ economizar Drive
+                    let MAX_WIDTH = 800;
                     let scaleSize = MAX_WIDTH / img.width;
                     
                     canvas.width = MAX_WIDTH;
@@ -649,7 +612,7 @@
                 if(res.sucesso) {
                     alert("✅ Material cadastrado com sucesso!");
                     fecharModalNovoMaterial();
-                    carregarDados(); // Recarrega para exibir o material
+                    carregarDados(); 
                 } else { alert("Erro: " + res.erro); }
             } catch(e) { alert("Erro de conexão."); }
             ocultarLoading();
