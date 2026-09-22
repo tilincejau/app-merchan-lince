@@ -183,7 +183,7 @@
         </div>
 
         <div id="aba-estoque" style="display: none;">
-            <button class="btn-sucesso" style="margin-bottom: 15px;" onclick="document.getElementById('modal-novo-material').style.display='flex'">➕ Adicionar Novo Material</button>
+            <button class="btn-sucesso" style="margin-bottom: 15px;" onclick="abrirModalNovoMaterial()">➕ Adicionar Novo Material</button>
             
             <h3 style="margin-bottom: 5px;">Filtrar por Marca</h3>
             <div class="marcas-carousel" id="carrossel-marcas-promotor"></div>
@@ -196,15 +196,15 @@
         <div class="modal-box">
             <h2 style="margin-top:0;">Cadastrar Merchan</h2>
             
-            <label class="info-label">Foto do Material (Obrigatório):</label>
-            <input type="file" id="novo-foto" accept="image/*" capture="environment" class="input-campo" onchange="processarFoto(this)">
+            <label class="info-label">Foto do Material (Câmera ou Galeria):</label>
+            <input type="file" id="novo-foto" accept="image/*" class="input-campo" onchange="processarFoto(this)">
             <img id="preview-foto" style="width: 100%; max-height: 150px; object-fit: contain; display: none; margin-bottom: 10px; border-radius: 8px;">
 
-            <label class="info-label">Marca (Ex: HEINEKEN, AMSTEL...):</label>
-            <input type="text" id="novo-marca" class="input-campo" placeholder="Ex: HEINEKEN">
+            <label class="info-label">Marca:</label>
+            <select id="novo-marca" class="input-campo"></select>
 
-            <label class="info-label">Seção (Cartaz, Faixa, Display...):</label>
-            <input type="text" id="novo-secao" class="input-campo" placeholder="Ex: CARTAZ">
+            <label class="info-label">Seção:</label>
+            <select id="novo-secao" class="input-campo"></select>
 
             <label class="info-label">Descrição do Material:</label>
             <input type="text" id="novo-desc" class="input-campo" placeholder="Ex: Cartaz Heineken 0.0 40x60">
@@ -244,16 +244,13 @@
 
     <script>
         // ⚠️ ATENÇÃO: COLE O LINK DA NOVA IMPLANTAÇÃO DENTRO DAS ASPAS ABAIXO:
-        const API_URL = "https://script.google.com/macros/s/AKfycbxaplwwa6WYhrjTjcaXq8O7iA5o5abzmBnsNz1mnNoqL9_8Dx3cGak4TFYTb85W6xTq1w/exec"; 
+        const API_URL = "SEU_LINK_DO_APPS_SCRIPT_AQUI"; 
 
-        let bd = { materiais: [], pedidos: [], marcas: [] };
+        let bd = { materiais: [], pedidos: [], marcas: [], secoes: [] };
         let usuarioLogado = {};
         let carrinho = [];
         let fotoB64 = "";
 
-        // =========================================
-        // TRADUTOR DE LINK DO GOOGLE DRIVE PARA IMG
-        // =========================================
         function getDirectImageUrl(url) {
             if (!url) return 'https://via.placeholder.com/150?text=Sem+Foto';
             let matchD = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -263,9 +260,6 @@
             return url;
         }
 
-        // =========================================
-        // AVISOS VISUAIS (TOAST) PARA AVISAR SEM BLOQUEAR A TELA
-        // =========================================
         function mostrarToast(msg, cor = "#1f2937") {
             let toast = document.getElementById("toast-merchan");
             if (!toast) {
@@ -278,7 +272,6 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.style.visibility='hidden', 300); }, 3000);
         }
 
-        // ZOOM DE IMAGENS
         function abrirZoom(url) {
             document.getElementById('img-zoom').src = url;
             document.getElementById('modal-zoom').style.display = 'flex';
@@ -435,7 +428,6 @@
                         <input type="number" id="qtd-${p.id}" class="qtd-input" value="1" min="1" max="${maxQtd}" readonly>
                         <button class="qtd-btn" onclick="alterarInputQtd('qtd-${p.id}', 1, ${maxQtd})">+</button>
                     </div>
-                    <!-- A CORREÇÃO DO BUG DO ADICIONAR ESTÁ AQUI NA PASSAGEM DO ID COM STRING SEGURA -->
                     <button class="btn-add" onclick="adicionarAoCarrinho('${p.id}')">Adicionar ao Pedido</button>`;
                 } else {
                     botaoAdicionar = `<button class="btn-add" disabled>Indisponível</button>`;
@@ -463,7 +455,6 @@
             let inputQtd = document.getElementById(`qtd-${idMaterial}`);
             let qtd = parseInt(inputQtd.value);
             
-            // O bug estava aqui: BD devolvia número, HTML devolvia string
             let produto = bd.materiais.find(m => String(m.id) === String(idMaterial));
             let itemExistente = carrinho.find(c => String(c.id) === String(idMaterial));
             
@@ -478,8 +469,6 @@
             
             atualizarCarrinhoUI();
             mostrarToast(`✅ Adicionado: ${qtd}x ${produto.descricao}`, "#10b981");
-            
-            // Reseta o input para 1 após adicionar
             inputQtd.value = 1;
         }
 
@@ -611,11 +600,21 @@
                     let p = bd.pedidos.find(x => x.id_pedido === idPedido);
                     if(p) p.status = 'SEPARADO';
                     
+                    ocultarLoading(); 
+                    
+                    // Dispara WhatsApp (sem pop-up block)
                     if(telefone) {
                         let msg = `Olá! Seus materiais de Merchandising (Pedido ${idPedido}) já estão separados e prontos para retirada com o Promotor.`;
                         let linkZap = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
-                        window.open(linkZap, '_blank');
+                        
+                        let a = document.createElement('a');
+                        a.href = linkZap;
+                        a.target = '_blank';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
                     }
+                    return; 
                 }
             } catch(e) { alert("Erro de conexão."); }
             ocultarLoading();
@@ -637,6 +636,21 @@
                 </div>`;
             });
             container.innerHTML = html;
+        }
+
+        function abrirModalNovoMaterial() {
+            // POPULA A LISTA DE MARCAS E SEÇÕES NA TELA DE CADASTRO
+            let htmlMarca = '<option value="">Selecione a Marca...</option>';
+            bd.marcas.forEach(m => { htmlMarca += `<option value="${m.marca}">${m.marca}</option>`; });
+            document.getElementById('novo-marca').innerHTML = htmlMarca;
+
+            let htmlSecao = '<option value="">Selecione a Seção...</option>';
+            if(bd.secoes) {
+                bd.secoes.forEach(s => { htmlSecao += `<option value="${s}">${s}</option>`; });
+            }
+            document.getElementById('novo-secao').innerHTML = htmlSecao;
+
+            document.getElementById('modal-novo-material').style.display='flex';
         }
 
         function processarFoto(input) {
