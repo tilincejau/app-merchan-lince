@@ -34,18 +34,15 @@
         .btn-sucesso { background: #10b981; color: white; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s;}
         .btn-sucesso:active { transform: scale(0.98); }
 
-        /* HEADER CENTRALIZADO */
         .header-topo-center { display: flex; flex-direction: column; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 15px; text-align: center; }
         .btn-sair { background: #fee2e2; color: #dc2626; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-sair:active { transform: scale(0.95); }
 
-        /* CARROSSEL DE MARCAS ESTILO STORIES */
         .marcas-carousel { display: flex; overflow-x: auto; gap: 15px; padding: 5px 0 15px 0; scrollbar-width: none; }
         .marcas-carousel::-webkit-scrollbar { display: none; }
         .marca-item { min-width: 65px; height: 65px; border-radius: 50%; background: #fff; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-sizing: border-box; overflow: hidden; padding: 2px; }
         .marca-item.ativa { border-color: var(--cor-primaria); background: #ecfdf5; transform: scale(1.05); }
         
-        /* GRID DE PRODUTOS */
         .grid-produtos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .produto-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .produto-img { width: 100%; height: 100px; object-fit: contain; border-radius: 8px; margin-bottom: 10px; background: #fff; cursor: zoom-in; }
@@ -58,12 +55,10 @@
         .btn-add { background: var(--cor-primaria); color: #fff; border: none; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .btn-add:disabled { background: #9ca3af; }
 
-        /* ABAS PROMOTOR */
         .abas { display: flex; gap: 8px; margin-bottom: 15px; }
         .tab-btn { flex: 1; background: #e5e7eb; color: #6b7280; border: none; padding: 10px 5px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; }
         .tab-btn.ativo { background: var(--cor-primaria); color: #fff; }
 
-        /* PEDIDOS PROMOTOR */
         .pedido-card { background: #fff; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
         .pedido-card.separado { border-left-color: #10b981; opacity: 0.8; }
         .pedido-header { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 8px; }
@@ -73,21 +68,17 @@
         .item-desc { font-size: 12px; font-weight: bold; color: #333; flex: 1; }
         .item-qtd { font-size: 14px; font-weight: 900; color: var(--cor-primaria); }
 
-        /* FLOATING CART */
         .btn-carrinho-flutuante { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: #f59e0b; color: white; text-align: center; padding: 15px; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); cursor: pointer; z-index: 100; transition: transform 0.2s; }
         .btn-carrinho-flutuante:active { transform: translateX(-50%) scale(0.95); }
 
-        /* MODAIS */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 999; padding: 15px; }
         .modal-box { background: white; padding: 25px; border-radius: 16px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; }
         .carrinho-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #ccc; }
         .carrinho-remover { color: #dc2626; cursor: pointer; font-weight: bold; font-size: 12px; }
 
-        /* ZOOM IMAGEM MODAL */
         .zoom-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; cursor: zoom-out; }
         .zoom-overlay img { max-width: 100%; max-height: 90vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; }
 
-        /* LOADING E TOAST */
         #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; font-weight: bold; color: var(--cor-primaria); }
         .spinner { border: 4px solid rgba(0,0,0,0.1); border-left-color: var(--cor-primaria); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -97,7 +88,6 @@
 
     <div id="loading-overlay"><div class="spinner"></div><span id="loading-msg">Carregando...</span></div>
 
-    <!-- MODAL DE ZOOM NAS FOTOS -->
     <div id="modal-zoom" class="zoom-overlay" onclick="this.style.display='none'">
         <img id="img-zoom" src="">
     </div>
@@ -192,7 +182,6 @@
         </div>
     </div>
 
-    <!-- MODAL NOVO MATERIAL -->
     <div id="modal-novo-material" class="modal-overlay">
         <div class="modal-box">
             <h2 style="margin-top:0;">Cadastrar Merchan</h2>
@@ -229,7 +218,6 @@
         </div>
     </div>
 
-    <!-- MODAL ENTRADA AVULSA -->
     <div id="modal-entrada-manual" class="modal-overlay">
         <div class="modal-box">
             <h3 style="margin-top:0; color:#10b981;">Dar Entrada Avulsa</h3>
@@ -244,7 +232,6 @@
         </div>
     </div>
 
-    <!-- MODAL SAÍDA AVULSA -->
     <div id="modal-saida-manual" class="modal-overlay">
         <div class="modal-box">
             <h3 style="margin-top:0; color:#dc3545;">Dar Saída Avulsa</h3>
@@ -260,13 +247,33 @@
     </div>
 
     <script>
-        // ⚠️ ATENÇÃO: COLE O LINK DA NOVA IMPLANTAÇÃO DENTRO DAS ASPAS ABAIXO:
-        const API_URL = "https://script.google.com/macros/s/AKfycbxaplwwa6WYhrjTjcaXq8O7iA5o5abzmBnsNz1mnNoqL9_8Dx3cGak4TFYTb85W6xTq1w/exec"; 
+        // ⚠️ ATENÇÃO: COLE O LINK DO APPS SCRIPT AQUI ABAIXO:
+        const API_URL = "SEU_LINK_DO_APPS_SCRIPT_AQUI"; 
 
         let bd = { materiais: [], pedidos: [], marcas: [], secoes: [] };
         let usuarioLogado = {};
         let carrinho = [];
         let fotoB64 = "";
+
+        // =====================================
+        // 🔥 FUNÇÃO PRINCIPAL E SEGURA DE COMUNICAÇÃO
+        // =====================================
+        async function chamarAPI(payload) {
+            let config = { 
+                method: 'POST', 
+                redirect: 'follow', // O SEGREDO DO SUCESSO AQUI
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            };
+            try {
+                let req = await fetch(API_URL, config);
+                let texto = await req.text();
+                return JSON.parse(texto);
+            } catch (e) {
+                console.error(e);
+                throw new Error("Erro na rede ou redirecionamento bloqueado.");
+            }
+        }
 
         function getDirectImageUrl(url) {
             if (!url) return 'https://via.placeholder.com/150?text=Sem+Foto';
@@ -320,7 +327,7 @@
             
             mostrarLoading("Autenticando...");
             try {
-                let req = await fetch(`${API_URL}?acao=login&usuario=${u}&senha=${s}`);
+                let req = await fetch(`${API_URL}?acao=login&usuario=${u}&senha=${s}`, { redirect: 'follow' });
                 let res = await req.json();
                 
                 if(res.sucesso) {
@@ -329,16 +336,14 @@
                     bd = res.bd;
                     iniciarInterface();
                 } else { alert("Acesso Negado: " + res.erro); }
-            } catch(e) { 
-                alert("Erro de rede.\nVerifique se o Link está correto e se o script foi implantado para Qualquer Pessoa."); 
-            }
+            } catch(e) { alert("Erro de rede."); }
             ocultarLoading();
         }
 
         async function carregarDados() {
             mostrarLoading("Carregando Catálogo...");
             try {
-                let req = await fetch(`${API_URL}?acao=buscar_dados`);
+                let req = await fetch(`${API_URL}?acao=buscar_dados`, { redirect: 'follow' });
                 let res = await req.json();
                 if(res.sucesso) {
                     bd = res.bd;
@@ -390,13 +395,7 @@
             marcas.forEach(marca => {
                 let marcaObj = bd.marcas.find(m => m.marca === marca);
                 let logoUrl = marcaObj && marcaObj.logo ? getDirectImageUrl(marcaObj.logo) : null;
-                
-                let conteudoMarca = "";
-                if (logoUrl) {
-                    conteudoMarca = `<img src="${logoUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-                } else {
-                    conteudoMarca = `<span style="font-size:10px; font-weight:bold; color:#555; text-align:center;">${marca}</span>`;
-                }
+                let conteudoMarca = logoUrl ? `<img src="${logoUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : `<span style="font-size:10px; font-weight:bold; color:#555; text-align:center;">${marca}</span>`;
 
                 html += `
                 <div class="marca-item" id="marca-${perfil}-${marca}" onclick="selecionarMarca('${marca}', '${perfil}')">
@@ -532,9 +531,7 @@
             };
 
             try {
-                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                let res = await req.json();
-                
+                let res = await chamarAPI(payload);
                 if(res.sucesso) {
                     alert("✅ Pedido enviado com sucesso!\nO promotor irá separar os materiais.");
                     carrinho = [];
@@ -634,11 +631,8 @@
 
             mostrarLoading("Atualizando pedido...");
             try {
-                let req = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ acao: "alterar_status_pedido", id_pedido: idPedido, novo_status: novoStatus })
-                });
-                let res = await req.json();
+                let payload = { acao: "alterar_status_pedido", id_pedido: idPedido, novo_status: novoStatus };
+                let res = await chamarAPI(payload);
 
                 if(res.sucesso) {
                     let p = bd.pedidos.find(x => x.id_pedido === idPedido);
@@ -647,17 +641,12 @@
                     ocultarLoading(); 
                     renderizarPedidosPromotor(); 
 
-                    if(novoStatus === 'INDISPONIVEL') {
-                        carregarDados();
-                    }
+                    if(novoStatus === 'INDISPONIVEL') { carregarDados(); }
                     
                     if(telefone) {
                         let msg = "";
-                        if (novoStatus === 'SEPARADO') {
-                            msg = `Olá! Seus materiais de Merchandising já estão separados e prontos para retirada.`;
-                        } else {
-                            msg = `Olá! Informo que os materiais solicitados não estão disponíveis no momento e o pedido foi cancelado.`;
-                        }
+                        if (novoStatus === 'SEPARADO') msg = `Olá! Seus materiais de Merchandising já estão separados e prontos para retirada.`;
+                        else msg = `Olá! Informo que os materiais solicitados não estão disponíveis no momento e o pedido foi cancelado.`;
                         
                         let linkZap = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
                         
@@ -703,9 +692,7 @@
             document.getElementById('novo-marca').innerHTML = htmlMarca;
 
             let htmlSecao = '<option value="">Selecione a Seção...</option>';
-            if(bd.secoes) {
-                bd.secoes.forEach(s => { htmlSecao += `<option value="${s}">${s}</option>`; });
-            }
+            if(bd.secoes) { bd.secoes.forEach(s => { htmlSecao += `<option value="${s}">${s}</option>`; }); }
             document.getElementById('novo-secao').innerHTML = htmlSecao;
 
             document.getElementById('modal-novo-material').style.display='flex';
@@ -773,9 +760,7 @@
             };
 
             try {
-                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                let res = await req.json();
-                
+                let res = await chamarAPI(payload);
                 if(res.sucesso) {
                     alert("✅ Material cadastrado com sucesso!");
                     fecharModalNovoMaterial();
@@ -801,17 +786,10 @@
 
             document.querySelector('#modal-entrada-manual .btn-sucesso').innerText = "Salvando...";
             
-            let payload = {
-                acao: "entrada_manual",
-                promotor: usuarioLogado.nome,
-                id_material: id,
-                qtd: qtd
-            };
+            let payload = { acao: "entrada_manual", promotor: usuarioLogado.nome, id_material: id, qtd: qtd };
 
             try {
-                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                let res = await req.json();
-                
+                let res = await chamarAPI(payload);
                 if(res.sucesso) {
                     alert("✅ Entrada registrada!");
                     document.getElementById('modal-entrada-manual').style.display = 'none';
@@ -836,17 +814,10 @@
 
             document.querySelector('#modal-saida-manual .btn-principal').innerText = "Salvando...";
             
-            let payload = {
-                acao: "saida_manual",
-                promotor: usuarioLogado.nome,
-                id_material: id,
-                qtd: qtd
-            };
+            let payload = { acao: "saida_manual", promotor: usuarioLogado.nome, id_material: id, qtd: qtd };
 
             try {
-                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                let res = await req.json();
-                
+                let res = await chamarAPI(payload);
                 if(res.sucesso) {
                     alert("✅ Saída registrada!");
                     document.getElementById('modal-saida-manual').style.display = 'none';
@@ -862,11 +833,8 @@
 
             mostrarLoading("Excluindo...");
             try {
-                let req = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ acao: "excluir_material", id_material: id, promotor: usuarioLogado.nome })
-                });
-                let res = await req.json();
+                let payload = { acao: "excluir_material", id_material: id, promotor: usuarioLogado.nome };
+                let res = await chamarAPI(payload);
 
                 if(res.sucesso) {
                     mostrarToast("✅ Material excluído!", "#10b981");
