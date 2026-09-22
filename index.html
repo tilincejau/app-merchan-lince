@@ -123,8 +123,9 @@
         <div class="header-topo-center">
             <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo-pequena">
             <div style="display:flex; justify-content:center; gap: 10px; margin-top: 5px;">
-                <button id="btn-voltar-adm-vend" class="btn-secundario" style="display:none; margin:0; padding:8px 16px;" onclick="iniciarInterface()">🔙 Voltar ADM</button>
-                <button class="btn-sair" onclick="sairDoSistema()">Sair do Sistema</button>
+                <button class="btn-secundario" style="margin:0; padding:8px 16px; border: 1.5px dashed var(--cor-primaria); color: var(--cor-primaria); background: transparent;" onclick="sincronizarSegundoPlano(true)">🔄 Sincronizar</button>
+                <button id="btn-voltar-adm-vend" class="btn-secundario" style="display:none; margin:0; padding:8px 16px;" onclick="iniciarInterface()">🔙 ADM</button>
+                <button class="btn-sair" onclick="sairDoSistema()">Sair</button>
             </div>
         </div>
         
@@ -153,8 +154,9 @@
         <div class="header-topo-center">
             <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo-pequena">
             <div style="display:flex; justify-content:center; gap: 10px; margin-top: 5px;">
-                <button id="btn-voltar-adm-prom" class="btn-secundario" style="display:none; margin:0; padding:8px 16px;" onclick="iniciarInterface()">🔙 Voltar ADM</button>
-                <button class="btn-sair" onclick="sairDoSistema()">Sair do Sistema</button>
+                <button class="btn-secundario" style="margin:0; padding:8px 16px; border: 1.5px dashed var(--cor-primaria); color: var(--cor-primaria); background: transparent;" onclick="sincronizarSegundoPlano(true)">🔄 Sincronizar</button>
+                <button id="btn-voltar-adm-prom" class="btn-secundario" style="display:none; margin:0; padding:8px 16px;" onclick="iniciarInterface()">🔙 ADM</button>
+                <button class="btn-sair" onclick="sairDoSistema()">Sair</button>
             </div>
         </div>
 
@@ -182,6 +184,7 @@
         </div>
     </div>
 
+    <!-- MODAL NOVO MATERIAL -->
     <div id="modal-novo-material" class="modal-overlay">
         <div class="modal-box">
             <h2 style="margin-top:0;">Cadastrar Merchan</h2>
@@ -218,6 +221,7 @@
         </div>
     </div>
 
+    <!-- MODAL ENTRADA AVULSA -->
     <div id="modal-entrada-manual" class="modal-overlay">
         <div class="modal-box">
             <h3 style="margin-top:0; color:#10b981;">Dar Entrada Avulsa</h3>
@@ -232,6 +236,7 @@
         </div>
     </div>
 
+    <!-- MODAL SAÍDA AVULSA -->
     <div id="modal-saida-manual" class="modal-overlay">
         <div class="modal-box">
             <h3 style="margin-top:0; color:#dc3545;">Dar Saída Avulsa</h3>
@@ -247,7 +252,7 @@
     </div>
 
     <script>
-        // ⚠️ ATENÇÃO: COLE O LINK DO APPS SCRIPT AQUI ABAIXO:
+        // ⚠️ ATENÇÃO: COLE O LINK DA NOVA IMPLANTAÇÃO DENTRO DAS ASPAS ABAIXO:
         const API_URL = "SEU_LINK_DO_APPS_SCRIPT_AQUI"; 
 
         let bd = { materiais: [], pedidos: [], marcas: [], secoes: [] };
@@ -256,25 +261,95 @@
         let fotoB64 = "";
 
         // =====================================
-        // 🔥 FUNÇÃO PRINCIPAL E SEGURA DE COMUNICAÇÃO
+        // 🔥 LÓGICA OFFLINE E FILA DE SINCRONIZAÇÃO
         // =====================================
+        let isSyncing = false;
+
         async function chamarAPI(payload) {
-            let config = { 
-                method: 'POST', 
-                redirect: 'follow', // O SEGREDO DO SUCESSO AQUI
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            };
+            let config = { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) };
             try {
                 let req = await fetch(API_URL, config);
                 let texto = await req.text();
                 return JSON.parse(texto);
-            } catch (e) {
-                console.error(e);
-                throw new Error("Erro na rede ou redirecionamento bloqueado.");
-            }
+            } catch (e) { throw new Error("Erro na rede."); }
         }
 
+        function adicionarNaFila(payload) {
+            let fila = JSON.parse(localStorage.getItem('merchan_fila')) || [];
+            payload._localId = Date.now() + Math.random().toString(36).substr(2, 5);
+            fila.push(payload);
+            localStorage.setItem('merchan_fila', JSON.stringify(fila));
+            sincronizarSegundoPlano(false);
+        }
+
+        async function sincronizarSegundoPlano(manual = false) {
+            if (!navigator.onLine) {
+                if(manual) mostrarToast("❌ Sem conexão à internet", "#dc2626");
+                return;
+            }
+            if (isSyncing) {
+                if(manual) mostrarToast("⏳ Sincronização já em andamento...", "#d97706");
+                return;
+            }
+
+            let fila = JSON.parse(localStorage.getItem('merchan_fila')) || [];
+            if (fila.length === 0) {
+                if (manual) {
+                    mostrarToast("✅ Tudo atualizado!", "#059669");
+                    carregarDadosSilenciosamente();
+                }
+                return;
+            }
+
+            isSyncing = true;
+            let filaRestante = [...fila];
+            let processouAlgo = false;
+            if(manual) mostrarToast(`🔄 Sincronizando ${fila.length} pendências...`, "#d97706");
+
+            for (let i = 0; i < fila.length; i++) {
+                let reqPayload = fila[i];
+                try {
+                    let p = {...reqPayload}; delete p._localId;
+                    let resp = await chamarAPI(p); 
+                    
+                    filaRestante = filaRestante.filter(item => item._localId !== reqPayload._localId);
+                    processouAlgo = true;
+                } catch (e) { break; } // Se a net cair no meio, para.
+            }
+
+            localStorage.setItem('merchan_fila', JSON.stringify(filaRestante));
+            
+            if (processouAlgo) {
+                if (filaRestante.length === 0) mostrarToast("✅ Tudo sincronizado com sucesso!", "#059669");
+                else mostrarToast(`⚠️ Sobraram ${filaRestante.length} itens (Sem rede)`, "#dc2626");
+                carregarDadosSilenciosamente();
+            }
+            isSyncing = false;
+        }
+
+        async function carregarDadosSilenciosamente() {
+            try {
+                let fila = JSON.parse(localStorage.getItem('merchan_fila')) || [];
+                if(fila.length > 0) return; // Se tem coisa local pra subir, não baixa o BD antigo.
+
+                let req = await fetch(`${API_URL}?acao=buscar_dados`, { redirect: 'follow' });
+                let res = await req.json();
+                if(res.sucesso) {
+                    bd = res.bd;
+                    localStorage.setItem('merchan_bd', JSON.stringify(bd));
+                    iniciarInterface();
+                }
+            } catch(e) {}
+        }
+
+        setInterval(() => sincronizarSegundoPlano(false), 300000); // Roda de 5 em 5 min sozinho
+        document.addEventListener("visibilitychange", function() {
+            if (document.visibilityState === 'visible') sincronizarSegundoPlano(false);
+        });
+
+        // =====================================
+        // 🔥 FUNÇÕES DA INTERFACE
+        // =====================================
         function getDirectImageUrl(url) {
             if (!url) return 'https://via.placeholder.com/150?text=Sem+Foto';
             let matchD = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -286,43 +361,36 @@
 
         function mostrarToast(msg, cor = "#1f2937") {
             let toast = document.getElementById("toast-merchan");
-            if (!toast) {
-                toast = document.createElement("div");
-                toast.id = "toast-merchan";
-                document.body.appendChild(toast);
-            }
+            if (!toast) { toast = document.createElement("div"); toast.id = "toast-merchan"; document.body.appendChild(toast); }
             toast.style.cssText = `visibility: visible; min-width: 250px; background-color: ${cor}; color: #fff; text-align: center; border-radius: 30px; padding: 14px; position: fixed; z-index: 10000; left: 50%; bottom: 80px; transform: translateX(-50%); font-size: 14px; font-weight: 600; box-shadow: 0px 8px 20px rgba(0,0,0,0.3); transition: opacity 0.3s, bottom 0.3s; opacity: 1;`;
             toast.innerText = msg;
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.style.visibility='hidden', 300); }, 3000);
         }
 
-        function abrirZoom(url) {
-            document.getElementById('img-zoom').src = url;
-            document.getElementById('modal-zoom').style.display = 'flex';
-        }
-
-        function mostrarLoading(msg) {
-            document.getElementById('loading-msg').innerText = msg;
-            document.getElementById('loading-overlay').style.display = 'flex';
-        }
+        function abrirZoom(url) { document.getElementById('img-zoom').src = url; document.getElementById('modal-zoom').style.display = 'flex'; }
+        function mostrarLoading(msg) { document.getElementById('loading-msg').innerText = msg; document.getElementById('loading-overlay').style.display = 'flex'; }
         function ocultarLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
 
         window.onload = function() {
+            let bdSalvo = localStorage.getItem('merchan_bd');
+            if(bdSalvo) { try { bd = JSON.parse(bdSalvo); } catch(e) {} }
+
             let userSalvo = localStorage.getItem('merchan_user');
             if(userSalvo) {
                 usuarioLogado = JSON.parse(userSalvo);
-                carregarDados();
+                if(bd.materiais && bd.materiais.length > 0) {
+                    iniciarInterface();
+                    carregarDadosSilenciosamente();
+                } else {
+                    carregarDados(); // Se o cache ta vazio, força baixar.
+                }
             }
         };
 
-        function sairDoSistema() {
-            localStorage.removeItem('merchan_user');
-            location.reload();
-        }
+        function sairDoSistema() { localStorage.removeItem('merchan_user'); location.reload(); }
 
         async function fazerLogin() {
-            let u = document.getElementById('campo-usuario').value;
-            let s = document.getElementById('campo-senha').value;
+            let u = document.getElementById('campo-usuario').value; let s = document.getElementById('campo-senha').value;
             if(!u || !s) return alert("Preencha Usuário e Senha!");
             
             mostrarLoading("Autenticando...");
@@ -334,9 +402,10 @@
                     usuarioLogado = res.usuario;
                     localStorage.setItem('merchan_user', JSON.stringify(usuarioLogado));
                     bd = res.bd;
+                    localStorage.setItem('merchan_bd', JSON.stringify(bd));
                     iniciarInterface();
                 } else { alert("Acesso Negado: " + res.erro); }
-            } catch(e) { alert("Erro de rede."); }
+            } catch(e) { alert("Erro de rede. Verifique a URL do Google Apps Script."); }
             ocultarLoading();
         }
 
@@ -347,85 +416,62 @@
                 let res = await req.json();
                 if(res.sucesso) {
                     bd = res.bd;
+                    localStorage.setItem('merchan_bd', JSON.stringify(bd));
                     iniciarInterface();
                 }
-            } catch(e) { alert("Erro ao carregar dados."); }
+            } catch(e) { 
+                if(bd.materiais && bd.materiais.length > 0) {
+                    iniciarInterface();
+                    mostrarToast("Modo Offline Ativo", "#d97706");
+                } else { alert("Sem internet e sem dados no cache."); }
+            }
             ocultarLoading();
         }
 
         function iniciarInterface() {
             document.querySelectorAll('.app-container').forEach(el => el.style.display = 'none');
-            
-            if(usuarioLogado.perfil === 'ADM') {
-                document.getElementById('tela-adm').style.display = 'block';
-            } else if(usuarioLogado.perfil === 'VENDEDOR') {
-                entrarComo('VENDEDOR');
-            } else {
-                entrarComo('PROMOTOR');
-            }
-        }
-
-        function entrarComo(visao) {
-            document.querySelectorAll('.app-container').forEach(el => el.style.display = 'none');
-            
             let isAdm = (usuarioLogado.perfil === 'ADM');
             document.getElementById('btn-voltar-adm-vend').style.display = isAdm ? 'inline-block' : 'none';
             document.getElementById('btn-voltar-adm-prom').style.display = isAdm ? 'inline-block' : 'none';
 
-            if(visao === 'VENDEDOR') {
-                document.getElementById('tela-vendedor').style.display = 'block';
-                renderizarMarcas('VENDEDOR');
-                atualizarCarrinhoUI();
-            } else {
-                document.getElementById('tela-promotor').style.display = 'block';
-                mudarAbaPromotor('pendentes');
-            }
+            if(usuarioLogado.perfil === 'ADM') document.getElementById('tela-adm').style.display = 'block';
+            else if(usuarioLogado.perfil === 'VENDEDOR') entrarComo('VENDEDOR');
+            else entrarComo('PROMOTOR');
+        }
+
+        function entrarComo(visao) {
+            document.querySelectorAll('.app-container').forEach(el => el.style.display = 'none');
+            if(visao === 'VENDEDOR') { document.getElementById('tela-vendedor').style.display = 'block'; renderizarMarcas('VENDEDOR'); atualizarCarrinhoUI(); } 
+            else { document.getElementById('tela-promotor').style.display = 'block'; mudarAbaPromotor('pendentes'); }
         }
 
         function extrairMarcas() {
-            let marcas = new Set();
-            bd.materiais.forEach(m => { if(m.marca) marcas.add(m.marca.toUpperCase()); });
+            let marcas = new Set(); bd.materiais.forEach(m => { if(m.marca) marcas.add(m.marca.toUpperCase()); });
             return Array.from(marcas).sort();
         }
 
         function renderizarMarcas(perfil) {
-            let marcas = extrairMarcas();
-            let html = "";
-            
+            let marcas = extrairMarcas(); let html = "";
             marcas.forEach(marca => {
                 let marcaObj = bd.marcas.find(m => m.marca === marca);
                 let logoUrl = marcaObj && marcaObj.logo ? getDirectImageUrl(marcaObj.logo) : null;
                 let conteudoMarca = logoUrl ? `<img src="${logoUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : `<span style="font-size:10px; font-weight:bold; color:#555; text-align:center;">${marca}</span>`;
-
-                html += `
-                <div class="marca-item" id="marca-${perfil}-${marca}" onclick="selecionarMarca('${marca}', '${perfil}')">
-                    ${conteudoMarca}
-                </div>`;
+                html += `<div class="marca-item" id="marca-${perfil}-${marca}" onclick="selecionarMarca('${marca}', '${perfil}')">${conteudoMarca}</div>`;
             });
 
-            if(perfil === 'VENDEDOR') {
-                document.getElementById('carrossel-marcas-vendedor').innerHTML = html;
-                if(marcas.length > 0) selecionarMarca(marcas[0], 'VENDEDOR');
-            } else {
-                document.getElementById('carrossel-marcas-promotor').innerHTML = html;
-                if(marcas.length > 0) selecionarMarca(marcas[0], 'PROMOTOR');
-            }
+            if(perfil === 'VENDEDOR') { document.getElementById('carrossel-marcas-vendedor').innerHTML = html; if(marcas.length > 0) selecionarMarca(marcas[0], 'VENDEDOR'); } 
+            else { document.getElementById('carrossel-marcas-promotor').innerHTML = html; if(marcas.length > 0) selecionarMarca(marcas[0], 'PROMOTOR'); }
         }
 
         function selecionarMarca(marca, perfil) {
             document.querySelectorAll('.marca-item').forEach(el => el.classList.remove('ativa'));
-            let btn = document.getElementById(`marca-${perfil}-${marca}`);
-            if(btn) btn.classList.add('ativa');
+            let btn = document.getElementById(`marca-${perfil}-${marca}`); if(btn) btn.classList.add('ativa');
 
             let container = perfil === 'VENDEDOR' ? document.getElementById('grid-produtos-vendedor') : document.getElementById('grid-produtos-promotor');
             let filtrados = bd.materiais.filter(m => m.marca.toUpperCase() === marca.toUpperCase());
 
-            if(perfil === 'VENDEDOR') {
-                document.getElementById('titulo-marca-vendedor').innerText = `Materiais: ${marca}`;
-                renderizarProdutosVendedor(filtrados, container);
-            } else {
-                renderizarProdutosPromotor(filtrados, container);
-            }
+            if(perfil === 'VENDEDOR') { document.getElementById('titulo-marca-vendedor').innerText = `Materiais: ${marca}`; renderizarProdutosVendedor(filtrados, container); } 
+            else { renderizarProdutosPromotor(filtrados, container); }
         }
 
         function renderizarProdutosVendedor(produtos, container) {
@@ -435,176 +481,91 @@
             produtos.forEach(p => {
                 let maxQtd = parseInt(p.estoque) || 0;
                 let img = p.foto ? getDirectImageUrl(p.foto) : 'https://via.placeholder.com/150?text=Sem+Foto';
-                
                 let botaoAdicionar = "";
                 if(maxQtd > 0) {
-                    botaoAdicionar = `
-                    <div class="qtd-controle">
-                        <button class="qtd-btn" onclick="alterarInputQtd('qtd-${p.id}', -1, ${maxQtd})">-</button>
-                        <input type="number" id="qtd-${p.id}" class="qtd-input" value="1" min="1" max="${maxQtd}" readonly>
-                        <button class="qtd-btn" onclick="alterarInputQtd('qtd-${p.id}', 1, ${maxQtd})">+</button>
-                    </div>
-                    <button class="btn-add" onclick="adicionarAoCarrinho('${p.id}')">Adicionar ao Pedido</button>`;
-                } else {
-                    botaoAdicionar = `<button class="btn-add" disabled>Indisponível</button>`;
-                }
+                    botaoAdicionar = `<div class="qtd-controle"><button class="qtd-btn" onclick="alterarInputQtd('qtd-${p.id}', -1, ${maxQtd})">-</button><input type="number" id="qtd-${p.id}" class="qtd-input" value="1" min="1" max="${maxQtd}" readonly><button class="qtd-btn" onclick="alterarInputQtd('qtd-${p.id}', 1, ${maxQtd})">+</button></div><button class="btn-add" onclick="adicionarAoCarrinho('${p.id}')">Adicionar ao Pedido</button>`;
+                } else { botaoAdicionar = `<button class="btn-add" disabled>Indisponível</button>`; }
 
-                html += `
-                <div class="produto-card">
-                    <img src="${img}" class="produto-img" onclick="abrirZoom('${img}')">
-                    <div class="produto-titulo">${p.descricao}</div>
-                    <div style="font-size:10px; color:#666; margin-bottom:5px;">${p.secao} • ${p.tipo}</div>
-                    <div class="produto-estoque ${maxQtd <= 0 ? 'baixo' : ''}">${maxQtd > 0 ? maxQtd + ' em estoque' : 'Sem estoque'}</div>
-                    ${botaoAdicionar}
-                </div>`;
+                html += `<div class="produto-card"><img src="${img}" class="produto-img" onclick="abrirZoom('${img}')"><div class="produto-titulo">${p.descricao}</div><div style="font-size:10px; color:#666; margin-bottom:5px;">${p.secao} • ${p.tipo}</div><div class="produto-estoque ${maxQtd <= 0 ? 'baixo' : ''}">${maxQtd > 0 ? maxQtd + ' em estoque' : 'Sem estoque'}</div>${botaoAdicionar}</div>`;
             });
             container.innerHTML = html;
         }
 
-        function alterarInputQtd(idInput, delta, max) {
-            let input = document.getElementById(idInput);
-            let val = parseInt(input.value) + delta;
-            if(val >= 1 && val <= max) input.value = val;
-        }
+        function alterarInputQtd(idInput, delta, max) { let input = document.getElementById(idInput); let val = parseInt(input.value) + delta; if(val >= 1 && val <= max) input.value = val; }
 
         function adicionarAoCarrinho(idMaterial) {
-            let inputQtd = document.getElementById(`qtd-${idMaterial}`);
-            let qtd = parseInt(inputQtd.value);
-            
+            let inputQtd = document.getElementById(`qtd-${idMaterial}`); let qtd = parseInt(inputQtd.value);
             let produto = bd.materiais.find(m => String(m.id) === String(idMaterial));
             let itemExistente = carrinho.find(c => String(c.id) === String(idMaterial));
             
             if(itemExistente) {
-                if(itemExistente.qtd + qtd > produto.estoque) {
-                    return mostrarToast("❌ Quantidade excede o estoque disponível!", "#dc2626");
-                }
+                if(itemExistente.qtd + qtd > produto.estoque) return mostrarToast("❌ Quantidade excede o estoque disponível!", "#dc2626");
                 itemExistente.qtd += qtd;
-            } else {
-                carrinho.push({ id: produto.id, descricao: produto.descricao, qtd: qtd });
-            }
+            } else { carrinho.push({ id: produto.id, descricao: produto.descricao, qtd: qtd }); }
             
-            atualizarCarrinhoUI();
-            mostrarToast(`✅ Adicionado: ${qtd}x ${produto.descricao}`, "#10b981");
-            inputQtd.value = 1;
+            atualizarCarrinhoUI(); mostrarToast(`✅ Adicionado: ${qtd}x ${produto.descricao}`, "#10b981"); inputQtd.value = 1;
         }
 
-        function atualizarCarrinhoUI() {
-            let totalItens = carrinho.reduce((acc, item) => acc + item.qtd, 0);
-            document.getElementById('qtd-carrinho').innerText = totalItens;
-        }
+        function atualizarCarrinhoUI() { document.getElementById('qtd-carrinho').innerText = carrinho.reduce((acc, item) => acc + item.qtd, 0); }
 
         function abrirCarrinho() {
             let container = document.getElementById('itens-carrinho');
-            if(carrinho.length === 0) {
-                container.innerHTML = "<p style='text-align:center; color:#666;'>Seu carrinho está vazio.</p>";
-            } else {
+            if(carrinho.length === 0) container.innerHTML = "<p style='text-align:center; color:#666;'>Seu carrinho está vazio.</p>";
+            else {
                 let html = "";
-                carrinho.forEach((item, index) => {
-                    html += `
-                    <div class="carrinho-item">
-                        <div style="font-size:13px; font-weight:bold; flex:1;">${item.qtd}x - ${item.descricao}</div>
-                        <div class="carrinho-remover" onclick="removerDoCarrinho(${index})">❌ Remover</div>
-                    </div>`;
-                });
+                carrinho.forEach((item, index) => { html += `<div class="carrinho-item"><div style="font-size:13px; font-weight:bold; flex:1;">${item.qtd}x - ${item.descricao}</div><div class="carrinho-remover" onclick="removerDoCarrinho(${index})">❌ Remover</div></div>`; });
                 container.innerHTML = html;
             }
             document.getElementById('modal-carrinho').style.display = 'flex';
         }
 
-        function removerDoCarrinho(index) {
-            carrinho.splice(index, 1);
-            abrirCarrinho();
-            atualizarCarrinhoUI();
-        }
+        function removerDoCarrinho(index) { carrinho.splice(index, 1); abrirCarrinho(); atualizarCarrinhoUI(); }
 
-        async function enviarPedido() {
+        // =====================================
+        // MUTAÇÕES OFFLINE-FIRST (VENDEDOR)
+        // =====================================
+        function enviarPedido() {
             if(carrinho.length === 0) return alert("Seu carrinho está vazio!");
+            let payload = { acao: "salvar_pedido", vendedor: usuarioLogado.nome, telefone: usuarioLogado.telefone, itens: carrinho };
             
-            document.querySelector('#modal-carrinho .btn-principal').innerText = "Enviando... ⏳";
-            document.querySelector('#modal-carrinho .btn-principal').disabled = true;
-
-            let payload = {
-                acao: "salvar_pedido",
-                vendedor: usuarioLogado.nome,
-                telefone: usuarioLogado.telefone,
-                itens: carrinho
-            };
-
-            try {
-                let res = await chamarAPI(payload);
-                if(res.sucesso) {
-                    alert("✅ Pedido enviado com sucesso!\nO promotor irá separar os materiais.");
-                    carrinho = [];
-                    atualizarCarrinhoUI();
-                    document.getElementById('modal-carrinho').style.display = 'none';
-                    carregarDados(); 
-                } else { alert("Erro: " + res.erro); }
-            } catch(e) { alert("Erro ao conectar."); }
+            adicionarNaFila(payload);
             
-            document.querySelector('#modal-carrinho .btn-principal').innerText = "✅ Finalizar Solicitação";
-            document.querySelector('#modal-carrinho .btn-principal').disabled = false;
+            alert("✅ Pedido registrado no celular!\nSerá enviado automaticamente assim que houver conexão.");
+            carrinho = []; atualizarCarrinhoUI(); document.getElementById('modal-carrinho').style.display = 'none';
         }
 
+        // =====================================
+        // MUTAÇÕES OFFLINE-FIRST (PROMOTOR)
+        // =====================================
         function mudarAbaPromotor(aba) {
-            ['pendentes', 'prontos', 'estoque'].forEach(a => {
-                document.getElementById(`aba-${a}`).style.display = 'none';
-                document.getElementById(`tab-${a}`).classList.remove('ativo');
-            });
-
-            document.getElementById(`aba-${aba}`).style.display = 'block';
-            document.getElementById(`tab-${aba}`).classList.add('ativo');
+            ['pendentes', 'prontos', 'estoque'].forEach(a => { document.getElementById(`aba-${a}`).style.display = 'none'; document.getElementById(`tab-${a}`).classList.remove('ativo'); });
+            document.getElementById(`aba-${aba}`).style.display = 'block'; document.getElementById(`tab-${aba}`).classList.add('ativo');
 
             if(aba === 'pendentes' || aba === 'prontos') renderizarPedidosPromotor();
             if(aba === 'estoque') renderizarMarcas('PROMOTOR');
         }
 
         function renderizarPedidosPromotor() {
-            let contPendentes = document.getElementById('lista-pedidos-pendentes');
-            let contProntos = document.getElementById('lista-pedidos-prontos');
-            let htmlPendentes = "";
-            let htmlProntos = "";
-            
-            let pendentes = bd.pedidos.filter(p => p.status === 'PENDENTE');
-            let prontos = bd.pedidos.filter(p => p.status === 'SEPARADO');
+            let contPendentes = document.getElementById('lista-pedidos-pendentes'); let contProntos = document.getElementById('lista-pedidos-prontos');
+            let htmlPendentes = ""; let htmlProntos = "";
+            let pendentes = bd.pedidos.filter(p => p.status === 'PENDENTE'); let prontos = bd.pedidos.filter(p => p.status === 'SEPARADO');
 
-            if(pendentes.length === 0) {
-                htmlPendentes = "<p style='text-align:center; color:#666; margin-top:20px;'>🎉 Nenhum pedido pendente!</p>";
-            } else {
+            if(pendentes.length === 0) htmlPendentes = "<p style='text-align:center; color:#666; margin-top:20px;'>🎉 Nenhum pedido pendente!</p>";
+            else {
                 pendentes.forEach(p => {
                     let itensHtml = construirHtmlItens(p);
-                    htmlPendentes += `
-                    <div class="pedido-card" id="pedido-${p.id_pedido}">
-                        <div class="pedido-header">
-                            <span>📅 ${p.data}</span><span style="color:#f59e0b; font-weight:bold;">PENDENTE</span>
-                        </div>
-                        <div class="pedido-vendedor">👤 Vendedor: ${p.vendedor}</div>
-                        ${itensHtml}
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            <button class="btn-sucesso" style="flex:2; margin:0;" onclick="alterarStatusPedido('${p.id_pedido}', '${p.telefone}', 'SEPARADO')">✅ Separado</button>
-                            <button class="btn-secundario" style="flex:1; margin:0; background:#fee2e2; color:#dc2626;" onclick="alterarStatusPedido('${p.id_pedido}', '${p.telefone}', 'INDISPONIVEL')">❌ Indisponível</button>
-                        </div>
-                    </div>`;
+                    htmlPendentes += `<div class="pedido-card" id="pedido-${p.id_pedido}"><div class="pedido-header"><span>📅 ${p.data}</span><span style="color:#f59e0b; font-weight:bold;">PENDENTE</span></div><div class="pedido-vendedor">👤 Vendedor: ${p.vendedor}</div>${itensHtml}<div style="display:flex; gap:10px; margin-top:10px;"><button class="btn-sucesso" style="flex:2; margin:0;" onclick="alterarStatusPedido('${p.id_pedido}', '${p.telefone}', 'SEPARADO')">✅ Separado</button><button class="btn-secundario" style="flex:1; margin:0; background:#fee2e2; color:#dc2626;" onclick="alterarStatusPedido('${p.id_pedido}', '${p.telefone}', 'INDISPONIVEL')">❌ Indisponível</button></div></div>`;
                 });
             }
 
-            if(prontos.length === 0) {
-                htmlProntos = "<p style='text-align:center; color:#666; margin-top:20px;'>Nenhum pedido aguardando retirada.</p>";
-            } else {
+            if(prontos.length === 0) htmlProntos = "<p style='text-align:center; color:#666; margin-top:20px;'>Nenhum pedido aguardando retirada.</p>";
+            else {
                 prontos.forEach(p => {
                     let itensHtml = construirHtmlItens(p);
-                    htmlProntos += `
-                    <div class="pedido-card separado" id="pedido-${p.id_pedido}">
-                        <div class="pedido-header">
-                            <span>📅 ${p.data}</span><span style="color:#10b981; font-weight:bold;">SEPARADO</span>
-                        </div>
-                        <div class="pedido-vendedor">👤 Vendedor: ${p.vendedor}</div>
-                        ${itensHtml}
-                    </div>`;
+                    htmlProntos += `<div class="pedido-card separado" id="pedido-${p.id_pedido}"><div class="pedido-header"><span>📅 ${p.data}</span><span style="color:#10b981; font-weight:bold;">SEPARADO</span></div><div class="pedido-vendedor">👤 Vendedor: ${p.vendedor}</div>${itensHtml}</div>`;
                 });
             }
-
-            if(contPendentes) contPendentes.innerHTML = htmlPendentes;
-            if(contProntos) contProntos.innerHTML = htmlProntos;
+            if(contPendentes) contPendentes.innerHTML = htmlPendentes; if(contProntos) contProntos.innerHTML = htmlProntos;
         }
 
         function construirHtmlItens(pedido) {
@@ -614,112 +575,60 @@
                 itensArray.forEach(item => {
                     let prodInfo = bd.materiais.find(m => String(m.id) === String(item.id)) || {};
                     let img = prodInfo.foto ? getDirectImageUrl(prodInfo.foto) : 'https://via.placeholder.com/150?text=S/F';
-                    itensHtml += `
-                    <div class="item-pedido">
-                        <img src="${img}" onclick="abrirZoom('${img}')">
-                        <div class="item-desc">${item.descricao}</div>
-                        <div class="item-qtd">${item.qtd} un</div>
-                    </div>`;
+                    itensHtml += `<div class="item-pedido"><img src="${img}" onclick="abrirZoom('${img}')"><div class="item-desc">${item.descricao}</div><div class="item-qtd">${item.qtd} un</div></div>`;
                 });
             } catch(e) {}
             return itensHtml;
         }
 
-        async function alterarStatusPedido(idPedido, telefone, novoStatus) {
+        function alterarStatusPedido(idPedido, telefone, novoStatus) {
             let acaoMsg = novoStatus === 'SEPARADO' ? "materiais foram separados" : "materiais estão indisponíveis";
             if(!confirm(`Confirmar que os ${acaoMsg}?`)) return;
 
-            mostrarLoading("Atualizando pedido...");
-            try {
-                let payload = { acao: "alterar_status_pedido", id_pedido: idPedido, novo_status: novoStatus };
-                let res = await chamarAPI(payload);
+            let payload = { acao: "alterar_status_pedido", id_pedido: idPedido, novo_status: novoStatus };
+            adicionarNaFila(payload);
 
-                if(res.sucesso) {
-                    let p = bd.pedidos.find(x => x.id_pedido === idPedido);
-                    if(p) p.status = novoStatus;
-                    
-                    ocultarLoading(); 
-                    renderizarPedidosPromotor(); 
+            // Atualização Otimista
+            let p = bd.pedidos.find(x => x.id_pedido === idPedido);
+            if(p) p.status = novoStatus;
+            
+            localStorage.setItem('merchan_bd', JSON.stringify(bd));
+            renderizarPedidosPromotor(); 
 
-                    if(novoStatus === 'INDISPONIVEL') { carregarDados(); }
-                    
-                    if(telefone) {
-                        let msg = "";
-                        if (novoStatus === 'SEPARADO') msg = `Olá! Seus materiais de Merchandising já estão separados e prontos para retirada.`;
-                        else msg = `Olá! Informo que os materiais solicitados não estão disponíveis no momento e o pedido foi cancelado.`;
-                        
-                        let linkZap = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
-                        
-                        let a = document.createElement('a');
-                        a.href = linkZap;
-                        a.target = '_blank';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                    }
-                    return; 
-                }
-            } catch(e) { alert("Erro de conexão."); }
-            ocultarLoading();
+            if(telefone) {
+                let msg = novoStatus === 'SEPARADO' ? `Olá! Seus materiais de Merchandising já estão separados e prontos para retirada.` : `Olá! Informo que os materiais solicitados não estão disponíveis no momento e o pedido foi cancelado.`;
+                let linkZap = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
+                let a = document.createElement('a'); a.href = linkZap; a.target = '_blank'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            }
+            mostrarToast("💾 Alteração salva localmente!");
         }
 
         function renderizarProdutosPromotor(produtos, container) {
             let html = "";
             if(produtos.length === 0) html = "<p>Nenhum material nesta marca.</p>";
-            
             produtos.forEach(p => {
                 let img = p.foto ? getDirectImageUrl(p.foto) : 'https://via.placeholder.com/150?text=Sem+Foto';
-                html += `
-                <div class="produto-card">
-                    <img src="${img}" class="produto-img" onclick="abrirZoom('${img}')">
-                    <div class="produto-titulo">${p.descricao}</div>
-                    <div style="font-size:10px; color:#666; margin-bottom:5px;">${p.secao} • ${p.tipo}</div>
-                    <div class="produto-estoque" style="font-size:14px; color:#1a4d2e;">Estoque: <b>${p.estoque}</b></div>
-                    
-                    <div style="display:flex; gap:5px; margin-top:5px;">
-                        <button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#ecfdf5; color:#10b981; font-size:11px;" onclick="abrirModalEntrada('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">➕ Entrada</button>
-                        <button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#fee2e2; color:#dc2626; font-size:11px;" onclick="abrirModalSaida('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">➖ Saída</button>
-                        <button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#f3f4f6; color:#374151; font-size:11px;" onclick="excluirMaterial('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">🗑️ Excluir</button>
-                    </div>
-                </div>`;
+                html += `<div class="produto-card"><img src="${img}" class="produto-img" onclick="abrirZoom('${img}')"><div class="produto-titulo">${p.descricao}</div><div style="font-size:10px; color:#666; margin-bottom:5px;">${p.secao} • ${p.tipo}</div><div class="produto-estoque" style="font-size:14px; color:#1a4d2e;">Estoque: <b>${p.estoque}</b></div><div style="display:flex; gap:5px; margin-top:5px;"><button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#ecfdf5; color:#10b981; font-size:11px;" onclick="abrirModalEntrada('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">➕ Entrada</button><button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#fee2e2; color:#dc2626; font-size:11px;" onclick="abrirModalSaida('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">➖ Saída</button><button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#f3f4f6; color:#374151; font-size:11px;" onclick="excluirMaterial('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">🗑️ Excluir</button></div></div>`;
             });
             container.innerHTML = html;
         }
 
         function abrirModalNovoMaterial() {
-            let htmlMarca = '<option value="">Selecione a Marca...</option>';
-            bd.marcas.forEach(m => { htmlMarca += `<option value="${m.marca}">${m.marca}</option>`; });
-            document.getElementById('novo-marca').innerHTML = htmlMarca;
-
-            let htmlSecao = '<option value="">Selecione a Seção...</option>';
-            if(bd.secoes) { bd.secoes.forEach(s => { htmlSecao += `<option value="${s}">${s}</option>`; }); }
-            document.getElementById('novo-secao').innerHTML = htmlSecao;
-
+            let htmlMarca = '<option value="">Selecione a Marca...</option>'; bd.marcas.forEach(m => { htmlMarca += `<option value="${m.marca}">${m.marca}</option>`; }); document.getElementById('novo-marca').innerHTML = htmlMarca;
+            let htmlSecao = '<option value="">Selecione a Seção...</option>'; if(bd.secoes) { bd.secoes.forEach(s => { htmlSecao += `<option value="${s}">${s}</option>`; }); } document.getElementById('novo-secao').innerHTML = htmlSecao;
             document.getElementById('modal-novo-material').style.display='flex';
         }
 
         function processarFoto(input) {
-            if (!input.files[0]) return; 
-            let file = input.files[0];
-            let reader = new FileReader();
-            
+            if (!input.files[0]) return; let file = input.files[0]; let reader = new FileReader();
             reader.onload = function(e) {
                 let img = new Image();
                 img.onload = function() {
-                    let canvas = document.createElement('canvas');
-                    let MAX_WIDTH = 800;
-                    let scaleSize = MAX_WIDTH / img.width;
-                    
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    
-                    let ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
+                    let canvas = document.createElement('canvas'); let MAX_WIDTH = 800; let scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
+                    let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     fotoB64 = canvas.toDataURL('image/jpeg', 0.7);
-                    
-                    document.getElementById('preview-foto').src = fotoB64;
-                    document.getElementById('preview-foto').style.display = 'block';
+                    document.getElementById('preview-foto').src = fotoB64; document.getElementById('preview-foto').style.display = 'block';
                 }
                 img.src = e.target.result;
             }
@@ -727,121 +636,60 @@
         }
 
         function fecharModalNovoMaterial() {
-            document.getElementById('modal-novo-material').style.display = 'none';
-            document.getElementById('novo-foto').value = '';
-            document.getElementById('preview-foto').style.display = 'none';
-            document.getElementById('novo-marca').value = '';
-            document.getElementById('novo-secao').value = '';
-            document.getElementById('novo-desc').value = '';
-            document.getElementById('novo-qtd').value = '1';
-            fotoB64 = "";
+            document.getElementById('modal-novo-material').style.display = 'none'; document.getElementById('novo-foto').value = ''; document.getElementById('preview-foto').style.display = 'none'; document.getElementById('novo-marca').value = ''; document.getElementById('novo-secao').value = ''; document.getElementById('novo-desc').value = ''; document.getElementById('novo-qtd').value = '1'; fotoB64 = "";
         }
 
-        async function salvarNovoMaterial() {
-            let marca = document.getElementById('novo-marca').value.toUpperCase();
-            let secao = document.getElementById('novo-secao').value.toUpperCase();
-            let desc = document.getElementById('novo-desc').value;
-            let tipo = document.getElementById('novo-tipo').value;
-            let qtd = document.getElementById('novo-qtd').value;
+        function salvarNovoMaterial() {
+            let marca = document.getElementById('novo-marca').value.toUpperCase(); let secao = document.getElementById('novo-secao').value.toUpperCase(); let desc = document.getElementById('novo-desc').value; let tipo = document.getElementById('novo-tipo').value; let qtd = document.getElementById('novo-qtd').value;
+            if(!fotoB64) return alert("A Foto é obrigatória!"); if(!marca || !secao || !desc || !qtd) return alert("Preencha todos os campos!");
 
-            if(!fotoB64) return alert("A Foto é obrigatória!");
-            if(!marca || !secao || !desc || !qtd) return alert("Preencha todos os campos!");
-
-            mostrarLoading("Salvando Imagem no Drive...");
-            let payload = {
-                acao: "salvar_material",
-                promotor: usuarioLogado.nome,
-                marca: marca,
-                secao: secao,
-                descricao: desc,
-                tipo: tipo,
-                qtd: qtd,
-                foto_b64: fotoB64
-            };
-
-            try {
-                let res = await chamarAPI(payload);
-                if(res.sucesso) {
-                    alert("✅ Material cadastrado com sucesso!");
-                    fecharModalNovoMaterial();
-                    carregarDados(); 
-                } else { alert("Erro: " + res.erro); }
-            } catch(e) { alert("Erro de conexão."); }
-            ocultarLoading();
+            let payload = { acao: "salvar_material", promotor: usuarioLogado.nome, marca: marca, secao: secao, descricao: desc, tipo: tipo, qtd: qtd, foto_b64: fotoB64 };
+            adicionarNaFila(payload);
+            
+            fecharModalNovoMaterial();
+            mudarAbaPromotor('estoque');
+            mostrarToast("💾 Material salvo na fila de envio!");
         }
 
-        // --- ENTRADA E SAÍDA MANUAIS ---
-
-        function abrirModalEntrada(id, desc) {
-            document.getElementById('entrada-id-material').value = id;
-            document.getElementById('entrada-nome-material').innerText = desc;
-            document.getElementById('entrada-qtd').value = 1;
-            document.getElementById('modal-entrada-manual').style.display = 'flex';
-        }
-
-        async function registrarEntradaManual() {
-            let id = document.getElementById('entrada-id-material').value;
-            let qtd = document.getElementById('entrada-qtd').value;
+        function abrirModalEntrada(id, desc) { document.getElementById('entrada-id-material').value = id; document.getElementById('entrada-nome-material').innerText = desc; document.getElementById('entrada-qtd').value = 1; document.getElementById('modal-entrada-manual').style.display = 'flex'; }
+        function registrarEntradaManual() {
+            let id = document.getElementById('entrada-id-material').value; let qtd = document.getElementById('entrada-qtd').value;
             if(qtd <= 0) return alert("Quantidade inválida.");
-
-            document.querySelector('#modal-entrada-manual .btn-sucesso').innerText = "Salvando...";
             
             let payload = { acao: "entrada_manual", promotor: usuarioLogado.nome, id_material: id, qtd: qtd };
+            adicionarNaFila(payload);
 
-            try {
-                let res = await chamarAPI(payload);
-                if(res.sucesso) {
-                    alert("✅ Entrada registrada!");
-                    document.getElementById('modal-entrada-manual').style.display = 'none';
-                    carregarDados();
-                } else { alert("Erro: " + res.erro); }
-            } catch(e) { alert("Erro de rede."); }
+            let m = bd.materiais.find(x => x.id === id); if(m) m.estoque = parseInt(m.estoque) + parseInt(qtd);
+            localStorage.setItem('merchan_bd', JSON.stringify(bd));
             
-            document.querySelector('#modal-entrada-manual .btn-sucesso').innerText = "Confirmar Entrada";
+            document.getElementById('modal-entrada-manual').style.display = 'none'; mudarAbaPromotor('estoque'); mostrarToast("💾 Entrada salva localmente!");
         }
 
-        function abrirModalSaida(id, desc) {
-            document.getElementById('saida-id-material').value = id;
-            document.getElementById('saida-nome-material').innerText = desc;
-            document.getElementById('saida-qtd').value = 1;
-            document.getElementById('modal-saida-manual').style.display = 'flex';
-        }
-
-        async function registrarSaidaManual() {
-            let id = document.getElementById('saida-id-material').value;
-            let qtd = document.getElementById('saida-qtd').value;
+        function abrirModalSaida(id, desc) { document.getElementById('saida-id-material').value = id; document.getElementById('saida-nome-material').innerText = desc; document.getElementById('saida-qtd').value = 1; document.getElementById('modal-saida-manual').style.display = 'flex'; }
+        function registrarSaidaManual() {
+            let id = document.getElementById('saida-id-material').value; let qtd = document.getElementById('saida-qtd').value;
             if(qtd <= 0) return alert("Quantidade inválida.");
-
-            document.querySelector('#modal-saida-manual .btn-principal').innerText = "Salvando...";
             
             let payload = { acao: "saida_manual", promotor: usuarioLogado.nome, id_material: id, qtd: qtd };
+            adicionarNaFila(payload);
 
-            try {
-                let res = await chamarAPI(payload);
-                if(res.sucesso) {
-                    alert("✅ Saída registrada!");
-                    document.getElementById('modal-saida-manual').style.display = 'none';
-                    carregarDados();
-                } else { alert("Erro: " + res.erro); }
-            } catch(e) { alert("Erro de rede."); }
-            
-            document.querySelector('#modal-saida-manual .btn-principal').innerText = "Confirmar Saída";
+            let m = bd.materiais.find(x => x.id === id); if(m) m.estoque = parseInt(m.estoque) - parseInt(qtd);
+            localStorage.setItem('merchan_bd', JSON.stringify(bd));
+
+            document.getElementById('modal-saida-manual').style.display = 'none'; mudarAbaPromotor('estoque'); mostrarToast("💾 Saída salva localmente!");
         }
 
-        async function excluirMaterial(id, desc) {
+        function excluirMaterial(id, desc) {
             if(!confirm(`⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR o material abaixo permanentemente?\n\n"${desc}"\n\nEssa ação não poderá ser desfeita.`)) return;
+            
+            let payload = { acao: "excluir_material", id_material: id, promotor: usuarioLogado.nome };
+            adicionarNaFila(payload);
 
-            mostrarLoading("Excluindo...");
-            try {
-                let payload = { acao: "excluir_material", id_material: id, promotor: usuarioLogado.nome };
-                let res = await chamarAPI(payload);
-
-                if(res.sucesso) {
-                    mostrarToast("✅ Material excluído!", "#10b981");
-                    carregarDados();
-                } else { alert("Erro: " + res.erro); }
-            } catch(e) { alert("Erro de rede."); }
-            ocultarLoading();
+            bd.materiais = bd.materiais.filter(x => x.id !== id);
+            localStorage.setItem('merchan_bd', JSON.stringify(bd));
+            
+            mudarAbaPromotor('estoque');
+            mostrarToast("💾 Exclusão salva localmente!", "#10b981");
         }
     </script>
 </body>
