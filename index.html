@@ -29,8 +29,10 @@
 
         .btn-principal { background: var(--cor-primaria); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; }
         .btn-principal:active { transform: scale(0.98); }
-        .btn-secundario { background: #e5e7eb; color: #374151; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
-        .btn-sucesso { background: #10b981; color: white; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer; }
+        .btn-secundario { background: #e5e7eb; color: #374151; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-secundario:active { transform: scale(0.98); }
+        .btn-sucesso { background: #10b981; color: white; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s;}
+        .btn-sucesso:active { transform: scale(0.98); }
 
         /* HEADER CENTRALIZADO */
         .header-topo-center { display: flex; flex-direction: column; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 15px; text-align: center; }
@@ -112,9 +114,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- VISÃO DO ADM (ESCOLHER PERFIL)             -->
-    <!-- ========================================== -->
+    <!-- VISÃO DO ADM -->
     <div id="tela-adm" class="app-container" style="display: none;">
         <div class="header-topo-center">
             <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo-pequena">
@@ -128,9 +128,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- VISÃO DO VENDEDOR (CATÁLOGO E CARRINHO)    -->
-    <!-- ========================================== -->
+    <!-- VISÃO DO VENDEDOR -->
     <div id="tela-vendedor" class="app-container" style="display: none; padding-bottom: 80px;">
         <div class="header-topo-center">
             <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo-pequena">
@@ -160,9 +158,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- VISÃO DO PROMOTOR (ESTOQUE E PEDIDOS)      -->
-    <!-- ========================================== -->
+    <!-- VISÃO DO PROMOTOR -->
     <div id="tela-promotor" class="app-container" style="display: none; padding-bottom: 80px;">
         <div class="header-topo-center">
             <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo-pequena">
@@ -196,6 +192,7 @@
         </div>
     </div>
 
+    <!-- MODAL NOVO MATERIAL -->
     <div id="modal-novo-material" class="modal-overlay">
         <div class="modal-box">
             <h2 style="margin-top:0;">Cadastrar Merchan</h2>
@@ -232,6 +229,22 @@
         </div>
     </div>
 
+    <!-- MODAL ENTRADA AVULSA -->
+    <div id="modal-entrada-manual" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:#10b981;">Dar Entrada Avulsa</h3>
+            <p id="entrada-nome-material" style="font-weight:bold;"></p>
+            <input type="hidden" id="entrada-id-material">
+            
+            <label class="info-label">Quantidade a adicionar:</label>
+            <input type="number" id="entrada-qtd" class="input-campo" value="1">
+
+            <button class="btn-sucesso" onclick="registrarEntradaManual()">Confirmar Entrada</button>
+            <button class="btn-secundario" onclick="document.getElementById('modal-entrada-manual').style.display='none'">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- MODAL SAÍDA AVULSA -->
     <div id="modal-saida-manual" class="modal-overlay">
         <div class="modal-box">
             <h3 style="margin-top:0; color:#dc3545;">Dar Saída Avulsa</h3>
@@ -248,7 +261,7 @@
 
     <script>
         // ⚠️ ATENÇÃO: COLE O LINK DA NOVA IMPLANTAÇÃO DENTRO DAS ASPAS ABAIXO:
-        const API_URL = "https://script.google.com/macros/s/AKfycbxaplwwa6WYhrjTjcaXq8O7iA5o5abzmBnsNz1mnNoqL9_8Dx3cGak4TFYTb85W6xTq1w/exec"; 
+        const API_URL = "SEU_LINK_DO_APPS_SCRIPT_AQUI"; 
 
         let bd = { materiais: [], pedidos: [], marcas: [], secoes: [] };
         let usuarioLogado = {};
@@ -316,7 +329,9 @@
                     bd = res.bd;
                     iniciarInterface();
                 } else { alert("Acesso Negado: " + res.erro); }
-            } catch(e) { alert("Erro de rede.\nVerifique se o Link está correto."); }
+            } catch(e) { 
+                alert("Erro de rede.\nVerifique se o Link está correto e se o script foi implantado para Qualquer Pessoa."); 
+            }
             ocultarLoading();
         }
 
@@ -533,9 +548,6 @@
             document.querySelector('#modal-carrinho .btn-principal').disabled = false;
         }
 
-        // ==========================================
-        // FUNÇÕES DO PROMOTOR (ABAS NOVAS PENDENTES / PRONTOS)
-        // ==========================================
         function mudarAbaPromotor(aba) {
             ['pendentes', 'prontos', 'estoque'].forEach(a => {
                 document.getElementById(`aba-${a}`).style.display = 'none';
@@ -558,7 +570,6 @@
             let pendentes = bd.pedidos.filter(p => p.status === 'PENDENTE');
             let prontos = bd.pedidos.filter(p => p.status === 'SEPARADO');
 
-            // Renderiza Pendentes
             if(pendentes.length === 0) {
                 htmlPendentes = "<p style='text-align:center; color:#666; margin-top:20px;'>🎉 Nenhum pedido pendente!</p>";
             } else {
@@ -579,7 +590,6 @@
                 });
             }
 
-            // Renderiza Prontos
             if(prontos.length === 0) {
                 htmlProntos = "<p style='text-align:center; color:#666; margin-top:20px;'>Nenhum pedido aguardando retirada.</p>";
             } else {
@@ -631,15 +641,13 @@
                 let res = await req.json();
 
                 if(res.sucesso) {
-                    // Se for INDISPONIVEL ele apaga da tela. Se for SEPARADO ele move pra aba certa
                     let p = bd.pedidos.find(x => x.id_pedido === idPedido);
                     if(p) p.status = novoStatus;
                     
                     ocultarLoading(); 
-                    renderizarPedidosPromotor(); // Recarrega a tela atual (some dos pendentes)
+                    renderizarPedidosPromotor(); 
 
                     if(novoStatus === 'INDISPONIVEL') {
-                        // Se estornou, precisamos recarregar os dados do estoque no fundo
                         carregarDados();
                     }
                     
@@ -653,7 +661,6 @@
                         
                         let linkZap = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
                         
-                        // Truque para não ser bloqueado como Pop-Up pelo Safari/Chrome
                         let a = document.createElement('a');
                         a.href = linkZap;
                         a.target = '_blank';
@@ -679,7 +686,12 @@
                     <div class="produto-titulo">${p.descricao}</div>
                     <div style="font-size:10px; color:#666; margin-bottom:5px;">${p.secao} • ${p.tipo}</div>
                     <div class="produto-estoque" style="font-size:14px; color:#1a4d2e;">Estoque: <b>${p.estoque}</b></div>
-                    <button class="btn-secundario" style="margin:0; background:#fee2e2; color:#dc2626;" onclick="abrirModalSaida('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">Dar Saída Avulsa</button>
+                    
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        <button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#ecfdf5; color:#10b981; font-size:11px;" onclick="abrirModalEntrada('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">➕ Entrada</button>
+                        <button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#fee2e2; color:#dc2626; font-size:11px;" onclick="abrirModalSaida('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">➖ Saída</button>
+                        <button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#f3f4f6; color:#374151; font-size:11px;" onclick="excluirMaterial('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">🗑️ Excluir</button>
+                    </div>
                 </div>`;
             });
             container.innerHTML = html;
@@ -773,6 +785,43 @@
             ocultarLoading();
         }
 
+        // --- ENTRADA E SAÍDA MANUAIS ---
+
+        function abrirModalEntrada(id, desc) {
+            document.getElementById('entrada-id-material').value = id;
+            document.getElementById('entrada-nome-material').innerText = desc;
+            document.getElementById('entrada-qtd').value = 1;
+            document.getElementById('modal-entrada-manual').style.display = 'flex';
+        }
+
+        async function registrarEntradaManual() {
+            let id = document.getElementById('entrada-id-material').value;
+            let qtd = document.getElementById('entrada-qtd').value;
+            if(qtd <= 0) return alert("Quantidade inválida.");
+
+            document.querySelector('#modal-entrada-manual .btn-sucesso').innerText = "Salvando...";
+            
+            let payload = {
+                acao: "entrada_manual",
+                promotor: usuarioLogado.nome,
+                id_material: id,
+                qtd: qtd
+            };
+
+            try {
+                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                let res = await req.json();
+                
+                if(res.sucesso) {
+                    alert("✅ Entrada registrada!");
+                    document.getElementById('modal-entrada-manual').style.display = 'none';
+                    carregarDados();
+                } else { alert("Erro: " + res.erro); }
+            } catch(e) { alert("Erro de rede."); }
+            
+            document.querySelector('#modal-entrada-manual .btn-sucesso').innerText = "Confirmar Entrada";
+        }
+
         function abrirModalSaida(id, desc) {
             document.getElementById('saida-id-material').value = id;
             document.getElementById('saida-nome-material').innerText = desc;
@@ -806,6 +855,25 @@
             } catch(e) { alert("Erro de rede."); }
             
             document.querySelector('#modal-saida-manual .btn-principal').innerText = "Confirmar Saída";
+        }
+
+        async function excluirMaterial(id, desc) {
+            if(!confirm(`⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR o material abaixo permanentemente?\n\n"${desc}"\n\nEssa ação não poderá ser desfeita.`)) return;
+
+            mostrarLoading("Excluindo...");
+            try {
+                let req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ acao: "excluir_material", id_material: id, promotor: usuarioLogado.nome })
+                });
+                let res = await req.json();
+
+                if(res.sucesso) {
+                    mostrarToast("✅ Material excluído!", "#10b981");
+                    carregarDados();
+                } else { alert("Erro: " + res.erro); }
+            } catch(e) { alert("Erro de rede."); }
+            ocultarLoading();
         }
     </script>
 </body>
