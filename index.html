@@ -57,13 +57,13 @@
         .btn-add:disabled { background: #9ca3af; }
 
         /* ABAS PROMOTOR */
-        .abas { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; background: #e5e7eb; color: #6b7280; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .abas { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; background: #e5e7eb; color: #6b7280; border: none; padding: 10px 5px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; }
         .tab-btn.ativo { background: var(--cor-primaria); color: #fff; }
 
         /* PEDIDOS PROMOTOR */
         .pedido-card { background: #fff; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-        .pedido-card.separado { border-left-color: #10b981; opacity: 0.7; }
+        .pedido-card.separado { border-left-color: #10b981; opacity: 0.8; }
         .pedido-header { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 8px; }
         .pedido-vendedor { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 10px; }
         .item-pedido { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 5px; background: #f9fafb; border-radius: 6px; }
@@ -173,21 +173,25 @@
         </div>
 
         <div class="abas">
-            <button class="tab-btn ativo" id="tab-solicitacoes" onclick="mudarAbaPromotor('solicitacoes')">📦 Solicitações</button>
-            <button class="tab-btn" id="tab-estoque" onclick="mudarAbaPromotor('estoque')">📊 Estoque Merchan</button>
+            <button class="tab-btn ativo" id="tab-pendentes" onclick="mudarAbaPromotor('pendentes')">📦 Pendentes</button>
+            <button class="tab-btn" id="tab-prontos" onclick="mudarAbaPromotor('prontos')">✅ Prontos</button>
+            <button class="tab-btn" id="tab-estoque" onclick="mudarAbaPromotor('estoque')">📊 Estoque</button>
         </div>
 
-        <div id="aba-solicitacoes">
+        <div id="aba-pendentes">
             <h3>Pedidos Pendentes de Separação</h3>
-            <div id="lista-pedidos-promotor"></div>
+            <div id="lista-pedidos-pendentes"></div>
+        </div>
+
+        <div id="aba-prontos" style="display: none;">
+            <h3>Pedidos Separados (Aguardando Retirada)</h3>
+            <div id="lista-pedidos-prontos"></div>
         </div>
 
         <div id="aba-estoque" style="display: none;">
             <button class="btn-sucesso" style="margin-bottom: 15px;" onclick="abrirModalNovoMaterial()">➕ Adicionar Novo Material</button>
-            
             <h3 style="margin-bottom: 5px;">Filtrar por Marca</h3>
             <div class="marcas-carousel" id="carrossel-marcas-promotor"></div>
-
             <div class="grid-produtos" id="grid-produtos-promotor"></div>
         </div>
     </div>
@@ -244,7 +248,7 @@
 
     <script>
         // ⚠️ ATENÇÃO: COLE O LINK DA NOVA IMPLANTAÇÃO DENTRO DAS ASPAS ABAIXO:
-        const API_URL = "https://script.google.com/macros/s/AKfycbxaplwwa6WYhrjTjcaXq8O7iA5o5abzmBnsNz1mnNoqL9_8Dx3cGak4TFYTb85W6xTq1w/exec"; 
+        const API_URL = "SEU_LINK_DO_APPS_SCRIPT_AQUI"; 
 
         let bd = { materiais: [], pedidos: [], marcas: [], secoes: [] };
         let usuarioLogado = {};
@@ -312,9 +316,7 @@
                     bd = res.bd;
                     iniciarInterface();
                 } else { alert("Acesso Negado: " + res.erro); }
-            } catch(e) { 
-                alert("Erro de rede.\nVerifique se você colocou a URL correta no código HTML e se configurou 'Quem pode acessar: Qualquer pessoa' no Google Apps Script."); 
-            }
+            } catch(e) { alert("Erro de rede.\nVerifique se o Link está correto."); }
             ocultarLoading();
         }
 
@@ -356,7 +358,7 @@
                 atualizarCarrinhoUI();
             } else {
                 document.getElementById('tela-promotor').style.display = 'block';
-                mudarAbaPromotor('solicitacoes');
+                mudarAbaPromotor('pendentes');
             }
         }
 
@@ -531,82 +533,127 @@
             document.querySelector('#modal-carrinho .btn-principal').disabled = false;
         }
 
+        // ==========================================
+        // FUNÇÕES DO PROMOTOR (ABAS NOVAS PENDENTES / PRONTOS)
+        // ==========================================
         function mudarAbaPromotor(aba) {
-            document.getElementById('aba-solicitacoes').style.display = 'none';
-            document.getElementById('aba-estoque').style.display = 'none';
-            document.getElementById('tab-solicitacoes').classList.remove('ativo');
-            document.getElementById('tab-estoque').classList.remove('ativo');
+            ['pendentes', 'prontos', 'estoque'].forEach(a => {
+                document.getElementById(`aba-${a}`).style.display = 'none';
+                document.getElementById(`tab-${a}`).classList.remove('ativo');
+            });
 
             document.getElementById(`aba-${aba}`).style.display = 'block';
             document.getElementById(`tab-${aba}`).classList.add('ativo');
 
-            if(aba === 'solicitacoes') renderizarPedidosPromotor();
+            if(aba === 'pendentes' || aba === 'prontos') renderizarPedidosPromotor();
             if(aba === 'estoque') renderizarMarcas('PROMOTOR');
         }
 
         function renderizarPedidosPromotor() {
-            let container = document.getElementById('lista-pedidos-promotor');
-            let html = "";
+            let contPendentes = document.getElementById('lista-pedidos-pendentes');
+            let contProntos = document.getElementById('lista-pedidos-prontos');
+            let htmlPendentes = "";
+            let htmlProntos = "";
             
             let pendentes = bd.pedidos.filter(p => p.status === 'PENDENTE');
+            let prontos = bd.pedidos.filter(p => p.status === 'SEPARADO');
+
+            // Renderiza Pendentes
             if(pendentes.length === 0) {
-                container.innerHTML = "<p style='text-align:center; color:#666; margin-top:20px;'>🎉 Nenhum pedido pendente!</p>";
-                return;
+                htmlPendentes = "<p style='text-align:center; color:#666; margin-top:20px;'>🎉 Nenhum pedido pendente!</p>";
+            } else {
+                pendentes.forEach(p => {
+                    let itensHtml = construirHtmlItens(p);
+                    htmlPendentes += `
+                    <div class="pedido-card" id="pedido-${p.id_pedido}">
+                        <div class="pedido-header">
+                            <span>📅 ${p.data}</span><span style="color:#f59e0b; font-weight:bold;">PENDENTE</span>
+                        </div>
+                        <div class="pedido-vendedor">👤 Vendedor: ${p.vendedor}</div>
+                        ${itensHtml}
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="btn-sucesso" style="flex:2; margin:0;" onclick="alterarStatusPedido('${p.id_pedido}', '${p.telefone}', 'SEPARADO')">✅ Separado</button>
+                            <button class="btn-secundario" style="flex:1; margin:0; background:#fee2e2; color:#dc2626;" onclick="alterarStatusPedido('${p.id_pedido}', '${p.telefone}', 'INDISPONIVEL')">❌ Indisponível</button>
+                        </div>
+                    </div>`;
+                });
             }
 
-            pendentes.forEach(p => {
-                let itensHtml = "";
-                try {
-                    let itensArray = JSON.parse(p.resumo_itens);
-                    itensArray.forEach(item => {
-                        let prodInfo = bd.materiais.find(m => String(m.id) === String(item.id)) || {};
-                        let img = prodInfo.foto ? getDirectImageUrl(prodInfo.foto) : 'https://via.placeholder.com/150?text=S/F';
-                        itensHtml += `
-                        <div class="item-pedido">
-                            <img src="${img}" onclick="abrirZoom('${img}')">
-                            <div class="item-desc">${item.descricao}</div>
-                            <div class="item-qtd">${item.qtd} un</div>
-                        </div>`;
-                    });
-                } catch(e) {}
+            // Renderiza Prontos
+            if(prontos.length === 0) {
+                htmlProntos = "<p style='text-align:center; color:#666; margin-top:20px;'>Nenhum pedido aguardando retirada.</p>";
+            } else {
+                prontos.forEach(p => {
+                    let itensHtml = construirHtmlItens(p);
+                    htmlProntos += `
+                    <div class="pedido-card separado" id="pedido-${p.id_pedido}">
+                        <div class="pedido-header">
+                            <span>📅 ${p.data}</span><span style="color:#10b981; font-weight:bold;">SEPARADO</span>
+                        </div>
+                        <div class="pedido-vendedor">👤 Vendedor: ${p.vendedor}</div>
+                        ${itensHtml}
+                    </div>`;
+                });
+            }
 
-                html += `
-                <div class="pedido-card" id="pedido-${p.id_pedido}">
-                    <div class="pedido-header">
-                        <span>📅 ${p.data}</span>
-                        <span style="color:#f59e0b; font-weight:bold;">PENDENTE</span>
-                    </div>
-                    <div class="pedido-vendedor">👤 Vendedor: ${p.vendedor}</div>
-                    ${itensHtml}
-                    <button class="btn-sucesso" style="margin-top:10px;" onclick="marcarComoSeparado('${p.id_pedido}', '${p.telefone}')">✅ Marcar como Separado</button>
-                </div>`;
-            });
-            container.innerHTML = html;
+            if(contPendentes) contPendentes.innerHTML = htmlPendentes;
+            if(contProntos) contProntos.innerHTML = htmlProntos;
         }
 
-        async function marcarComoSeparado(idPedido, telefone) {
-            if(!confirm("Confirmar que os materiais foram separados?")) return;
+        function construirHtmlItens(pedido) {
+            let itensHtml = "";
+            try {
+                let itensArray = JSON.parse(pedido.resumo_itens);
+                itensArray.forEach(item => {
+                    let prodInfo = bd.materiais.find(m => String(m.id) === String(item.id)) || {};
+                    let img = prodInfo.foto ? getDirectImageUrl(prodInfo.foto) : 'https://via.placeholder.com/150?text=S/F';
+                    itensHtml += `
+                    <div class="item-pedido">
+                        <img src="${img}" onclick="abrirZoom('${img}')">
+                        <div class="item-desc">${item.descricao}</div>
+                        <div class="item-qtd">${item.qtd} un</div>
+                    </div>`;
+                });
+            } catch(e) {}
+            return itensHtml;
+        }
+
+        async function alterarStatusPedido(idPedido, telefone, novoStatus) {
+            let acaoMsg = novoStatus === 'SEPARADO' ? "materiais foram separados" : "materiais estão indisponíveis";
+            if(!confirm(`Confirmar que os ${acaoMsg}?`)) return;
 
             mostrarLoading("Atualizando pedido...");
             try {
                 let req = await fetch(API_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ acao: "marcar_separado", id_pedido: idPedido })
+                    body: JSON.stringify({ acao: "alterar_status_pedido", id_pedido: idPedido, novo_status: novoStatus })
                 });
                 let res = await req.json();
 
                 if(res.sucesso) {
-                    document.getElementById(`pedido-${idPedido}`).remove();
+                    // Se for INDISPONIVEL ele apaga da tela. Se for SEPARADO ele move pra aba certa
                     let p = bd.pedidos.find(x => x.id_pedido === idPedido);
-                    if(p) p.status = 'SEPARADO';
+                    if(p) p.status = novoStatus;
                     
                     ocultarLoading(); 
+                    renderizarPedidosPromotor(); // Recarrega a tela atual (some dos pendentes)
+
+                    if(novoStatus === 'INDISPONIVEL') {
+                        // Se estornou, precisamos recarregar os dados do estoque no fundo
+                        carregarDados();
+                    }
                     
-                    // Dispara WhatsApp (sem pop-up block)
                     if(telefone) {
-                        let msg = `Olá! Seus materiais de Merchandising (Pedido ${idPedido}) já estão separados e prontos para retirada com o Promotor.`;
+                        let msg = "";
+                        if (novoStatus === 'SEPARADO') {
+                            msg = `Olá! Seus materiais de Merchandising já estão separados e prontos para retirada.`;
+                        } else {
+                            msg = `Olá! Informo que os materiais solicitados não estão disponíveis no momento e o pedido foi cancelado.`;
+                        }
+                        
                         let linkZap = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
                         
+                        // Truque para não ser bloqueado como Pop-Up pelo Safari/Chrome
                         let a = document.createElement('a');
                         a.href = linkZap;
                         a.target = '_blank';
@@ -639,7 +686,6 @@
         }
 
         function abrirModalNovoMaterial() {
-            // POPULA A LISTA DE MARCAS E SEÇÕES NA TELA DE CADASTRO
             let htmlMarca = '<option value="">Selecione a Marca...</option>';
             bd.marcas.forEach(m => { htmlMarca += `<option value="${m.marca}">${m.marca}</option>`; });
             document.getElementById('novo-marca').innerHTML = htmlMarca;
