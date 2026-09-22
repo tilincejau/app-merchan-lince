@@ -4,7 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Catálogo Merchan - Lince</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --cor-primaria: #1a4d2e; --cor-secundaria: #256b40;
+            --cor-fundo: #f3f4f6; --cor-card: #ffffff;
+            --cor-texto: #1f2937; --cor-label: #6b7280;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); margin: 0; color: var(--cor-texto); -webkit-font-smoothing: antialiased; }
+        .app-container { max-width: 500px; margin: 0 auto; padding: 15px; box-sizing: border-box; }
+
+        .card { background: var(--cor-card); padding: 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .logo { width: 200px; display: block; margin: 0 auto 10px auto; }
+        .logo-pequena { width: 120px; }
+        .desenvolvedor { text-align: center; font-size: 11px; color: #888; margin-bottom: 20px; }
+
+        h2, h3 { color: var(--cor-primaria); margin-top: 0; }
+        .info-label { font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--cor-label); display: block; margin-bottom: 5px; margin-top: 10px; }
+
+        .input-campo { width: 100%; padding: 12px; border: 1.5px solid #d1d5db; border-radius: 10px; box-sizing: border-box; font-size: 15px; background: #f9fafb; outline: none; transition: border 0.3s; font-family: 'Inter';}
+        .input-campo:focus { border-color: var(--cor-primaria); background: #fff; }
+
+        .btn-principal { background: var(--cor-primaria); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; }
+        .btn-principal:active { transform: scale(0.98); }
+        .btn-secundario { background: #e5e7eb; color: #374151; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
+        .btn-sucesso { background: #10b981; color: white; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer; }
+
+        /* HEADER */
+        .header-topo { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 15px; }
+        .btn-sair { background: #fee2e2; color: #dc2626; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        /* CARROSSEL DE MARCAS ESTILO STORIES */
+        .marcas-carousel { display: flex; overflow-x: auto; gap: 15px; padding: 5px 0 15px 0; scrollbar-width: none; }
+        .marcas-carousel::-webkit-scrollbar { display: none; }
+        .marca-item { min-width: 65px; height: 65px; border-radius: 50%; background: #fff; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-direction: column; transition: 0.2s; }
+        .marca-item.ativa { border-color: var(--cor-primaria); background: #ecfdf5; transform: scale(1.05); }
+        .marca-item img { width: 90%; height: 90%; object-fit: contain; border-radius: 50%; }
+        .marca-nome { font-size: 10px; font-weight: bold; text-align: center; margin-top: 4px; color: #555; }
+
+        /* GRID DE PRODUTOS */
+        .grid-produtos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .produto-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .produto-img { width: 100%; height: 100px; object-fit: contain; border-radius: 8px; margin-bottom: 10px; background: #f9fafb; }
+        .produto-titulo { font-size: 13px; font-weight: bold; color: #333; line-height: 1.2; margin-bottom: 5px; flex-grow: 1; }
+        .produto-estoque { font-size: 11px; color: #10b981; font-weight: bold; margin-bottom: 8px; }
+        .produto-estoque.baixo { color: #dc2626; }
+        .qtd-controle { display: flex; gap: 5px; margin-bottom: 8px; }
+        .qtd-btn { background: #e5e7eb; border: none; width: 30px; height: 30px; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .qtd-input { flex: 1; text-align: center; border: 1px solid #d1d5db; border-radius: 6px; font-weight: bold; }
+        .btn-add { background: var(--cor-primaria); color: #fff; border: none; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-add:disabled { background: #9ca3af; }
+
+        /* ABAS PROMOTOR */
+        .abas { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; background: #e5e7eb; color: #6b7280; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .tab-btn.ativo { background: var(--cor-primaria); color: #fff; }
+
+        /* PEDIDOS PROMOTOR */
+        .pedido-card { background: #fff; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .pedido-card.separado { border-left-color: #10b981; opacity: 0.7; }
+        .pedido-header { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 8px; }
+        .pedido-vendedor { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .item-pedido { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 5px; background: #f9fafb; border-radius: 6px; }
+        .item-pedido img { width: 40px; height: 40px; object-fit: contain; border-radius: 4px; }
+        .item-desc { font-size: 12px; font-weight: bold; color: #333; flex: 1; }
+        .item-qtd { font-size: 14px; font-weight: 900; color: var(--cor-primaria); }
+
+        /* FLOATING CART */
+        .btn-carrinho-flutuante { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: #f59e0b; color: white; text-align: center; padding: 15px; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); cursor: pointer; z-index: 100; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 999; padding: 15px; }
+        .modal-box { background: white; padding: 25px; border-radius: 16px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; }
+        .carrinho-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #ccc; }
+        .carrinho-remover { color: #dc2626; cursor: pointer; font-weight: bold; font-size: 12px; }
+
+        /* LOADING */
+        #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; font-weight: bold; color: var(--cor-primaria); }
+        .spinner { border: 4px solid rgba(0,0,0,0.1); border-left-color: var(--cor-primaria); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
 
@@ -153,6 +234,461 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // ⚠️ ATENÇÃO: NÃO ESQUEÇA DE COLAR O LINK DO SEU GOOGLE APPS SCRIPT AQUI ⚠️
+        const API_URL = "SEU_LINK_DO_APPS_SCRIPT_AQUI"; 
+
+        let bd = { materiais: [], pedidos: [] };
+        let usuarioLogado = {};
+        let carrinho = [];
+        let fotoB64 = "";
+        let marcaAtivaVendedor = "";
+        let marcaAtivaPromotor = "";
+
+        function mostrarLoading(msg) {
+            document.getElementById('loading-msg').innerText = msg;
+            document.getElementById('loading-overlay').style.display = 'flex';
+        }
+        function ocultarLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
+
+        window.onload = function() {
+            let userSalvo = localStorage.getItem('merchan_user');
+            if(userSalvo) {
+                usuarioLogado = JSON.parse(userSalvo);
+                carregarDados();
+            }
+        };
+
+        function sairDoSistema() {
+            localStorage.removeItem('merchan_user');
+            location.reload();
+        }
+
+        async function fazerLogin() {
+            let u = document.getElementById('campo-usuario').value;
+            let s = document.getElementById('campo-senha').value;
+            if(!u || !s) return alert("Preencha Usuário e Senha!");
+            
+            mostrarLoading("Autenticando...");
+            try {
+                let req = await fetch(`${API_URL}?acao=login&usuario=${u}&senha=${s}`);
+                let res = await req.json();
+                
+                if(res.sucesso) {
+                    usuarioLogado = res.usuario;
+                    localStorage.setItem('merchan_user', JSON.stringify(usuarioLogado));
+                    bd = res.bd;
+                    iniciarInterface();
+                } else { alert("Acesso Negado: " + res.erro); }
+            } catch(e) { alert("Erro de rede."); }
+            ocultarLoading();
+        }
+
+        async function carregarDados() {
+            mostrarLoading("Carregando Catálogo...");
+            try {
+                let req = await fetch(`${API_URL}?acao=buscar_dados`);
+                let res = await req.json();
+                if(res.sucesso) {
+                    bd = res.bd;
+                    iniciarInterface();
+                }
+            } catch(e) { alert("Erro ao carregar dados."); }
+            ocultarLoading();
+        }
+
+        function iniciarInterface() {
+            document.getElementById('tela-login').style.display = 'none';
+            
+            if(usuarioLogado.perfil === 'VENDEDOR') {
+                document.getElementById('tela-vendedor').style.display = 'block';
+                renderizarMarcas('VENDEDOR');
+                atualizarCarrinhoUI();
+            } else {
+                document.getElementById('tela-promotor').style.display = 'block';
+                mudarAbaPromotor('solicitacoes');
+            }
+        }
+
+        function extrairMarcas() {
+            let marcas = new Set();
+            bd.materiais.forEach(m => { if(m.marca) marcas.add(m.marca.toUpperCase()); });
+            return Array.from(marcas).sort();
+        }
+
+        function renderizarMarcas(perfil) {
+            let marcas = extrairMarcas();
+            let html = "";
+            
+            marcas.forEach(marca => {
+                html += `
+                <div class="marca-item" id="marca-${perfil}-${marca}" onclick="selecionarMarca('${marca}', '${perfil}')">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: #eee; display: flex; align-items:center; justify-content:center; overflow:hidden;">
+                        <span style="font-size:10px; font-weight:bold; color:#555; text-align:center;">${marca}</span>
+                    </div>
+                </div>`;
+            });
+
+            if(perfil === 'VENDEDOR') {
+                document.getElementById('carrossel-marcas-vendedor').innerHTML = html;
+                if(marcas.length > 0) selecionarMarca(marcas[0], 'VENDEDOR');
+            } else {
+                document.getElementById('carrossel-marcas-promotor').innerHTML = html;
+                if(marcas.length > 0) selecionarMarca(marcas[0], 'PROMOTOR');
+            }
+        }
+
+        function selecionarMarca(marca, perfil) {
+            document.querySelectorAll('.marca-item').forEach(el => el.classList.remove('ativa'));
+            let btn = document.getElementById(`marca-${perfil}-${marca}`);
+            if(btn) btn.classList.add('ativa');
+
+            let container = perfil === 'VENDEDOR' ? document.getElementById('grid-produtos-vendedor') : document.getElementById('grid-produtos-promotor');
+            let filtrados = bd.materiais.filter(m => m.marca.toUpperCase() === marca.toUpperCase());
+
+            if(perfil === 'VENDEDOR') {
+                document.getElementById('titulo-marca-vendedor').innerText = `Materiais: ${marca}`;
+                marcaAtivaVendedor = marca;
+                renderizarProdutosVendedor(filtrados, container);
+            } else {
+                marcaAtivaPromotor = marca;
+                renderizarProdutosPromotor(filtrados, container);
+            }
+        }
+
+        // ==========================================
+        // FUNÇÕES DO VENDEDOR
+        // ==========================================
+        function renderizarProdutosVendedor(produtos, container) {
+            let html = "";
+            if(produtos.length === 0) html = "<p>Nenhum material nesta marca.</p>";
+            
+            produtos.forEach(p => {
+                let maxQtd = parseInt(p.estoque) || 0;
+                let img = p.foto ? p.foto : 'https://via.placeholder.com/150?text=Sem+Foto';
+                
+                let botaoAdicionar = "";
+                if(maxQtd > 0) {
+                    botaoAdicionar = `
+                    <div class="qtd-controle">
+                        <button class="qtd-btn" onclick="alterarInputQtd('qtd-${p.id}', -1, ${maxQtd})">-</button>
+                        <input type="number" id="qtd-${p.id}" class="qtd-input" value="1" min="1" max="${maxQtd}" readonly>
+                        <button class="qtd-btn" onclick="alterarInputQtd('qtd-${p.id}', 1, ${maxQtd})">+</button>
+                    </div>
+                    <button class="btn-add" onclick="adicionarAoCarrinho('${p.id}')">Adicionar</button>`;
+                } else {
+                    botaoAdicionar = `<button class="btn-add" disabled>Indisponível</button>`;
+                }
+
+                html += `
+                <div class="produto-card">
+                    <img src="${img}" class="produto-img">
+                    <div class="produto-titulo">${p.descricao}</div>
+                    <div style="font-size:10px; color:#666; margin-bottom:5px;">${p.secao} • ${p.tipo}</div>
+                    <div class="produto-estoque ${maxQtd <= 0 ? 'baixo' : ''}">${maxQtd > 0 ? maxQtd + ' em estoque' : 'Sem estoque'}</div>
+                    ${botaoAdicionar}
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function alterarInputQtd(idInput, delta, max) {
+            let input = document.getElementById(idInput);
+            let val = parseInt(input.value) + delta;
+            if(val >= 1 && val <= max) input.value = val;
+        }
+
+        function adicionarAoCarrinho(idMaterial) {
+            let inputQtd = document.getElementById(`qtd-${idMaterial}`);
+            let qtd = parseInt(inputQtd.value);
+            let produto = bd.materiais.find(m => m.id === idMaterial);
+            
+            let itemExistente = carrinho.find(c => c.id === idMaterial);
+            if(itemExistente) {
+                if(itemExistente.qtd + qtd > produto.estoque) return alert("Quantidade excede o estoque disponível!");
+                itemExistente.qtd += qtd;
+            } else {
+                carrinho.push({ id: produto.id, descricao: produto.descricao, qtd: qtd });
+            }
+            
+            atualizarCarrinhoUI();
+            alert(`✅ Adicionado: ${qtd}x ${produto.descricao}`);
+        }
+
+        function atualizarCarrinhoUI() {
+            let totalItens = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+            document.getElementById('qtd-carrinho').innerText = totalItens;
+        }
+
+        function abrirCarrinho() {
+            let container = document.getElementById('itens-carrinho');
+            if(carrinho.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color:#666;'>Seu carrinho está vazio.</p>";
+            } else {
+                let html = "";
+                carrinho.forEach((item, index) => {
+                    html += `
+                    <div class="carrinho-item">
+                        <div style="font-size:13px; font-weight:bold; flex:1;">${item.qtd}x - ${item.descricao}</div>
+                        <div class="carrinho-remover" onclick="removerDoCarrinho(${index})">❌ Remover</div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            }
+            document.getElementById('modal-carrinho').style.display = 'flex';
+        }
+
+        function removerDoCarrinho(index) {
+            carrinho.splice(index, 1);
+            abrirCarrinho();
+            atualizarCarrinhoUI();
+        }
+
+        async function enviarPedido() {
+            if(carrinho.length === 0) return alert("Seu carrinho está vazio!");
+            
+            document.querySelector('#modal-carrinho .btn-principal').innerText = "Enviando... ⏳";
+            document.querySelector('#modal-carrinho .btn-principal').disabled = true;
+
+            let payload = {
+                acao: "salvar_pedido",
+                vendedor: usuarioLogado.nome,
+                telefone: usuarioLogado.telefone,
+                itens: carrinho
+            };
+
+            try {
+                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                let res = await req.json();
+                
+                if(res.sucesso) {
+                    alert("✅ Pedido enviado com sucesso!\nO promotor irá separar os materiais.");
+                    carrinho = [];
+                    atualizarCarrinhoUI();
+                    document.getElementById('modal-carrinho').style.display = 'none';
+                    carregarDados(); // Recarrega para atualizar estoque na tela
+                } else { alert("Erro: " + res.erro); }
+            } catch(e) { alert("Erro ao conectar."); }
+            
+            document.querySelector('#modal-carrinho .btn-principal').innerText = "✅ Finalizar Solicitação";
+            document.querySelector('#modal-carrinho .btn-principal').disabled = false;
+        }
+
+        // ==========================================
+        // FUNÇÕES DO PROMOTOR
+        // ==========================================
+        function mudarAbaPromotor(aba) {
+            document.getElementById('aba-solicitacoes').style.display = 'none';
+            document.getElementById('aba-estoque').style.display = 'none';
+            document.getElementById('tab-solicitacoes').classList.remove('ativo');
+            document.getElementById('tab-estoque').classList.remove('ativo');
+
+            document.getElementById(`aba-${aba}`).style.display = 'block';
+            document.getElementById(`tab-${aba}`).classList.add('ativo');
+
+            if(aba === 'solicitacoes') renderizarPedidosPromotor();
+            if(aba === 'estoque') renderizarMarcas('PROMOTOR');
+        }
+
+        function renderizarPedidosPromotor() {
+            let container = document.getElementById('lista-pedidos-promotor');
+            let html = "";
+            
+            let pendentes = bd.pedidos.filter(p => p.status === 'PENDENTE');
+            if(pendentes.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color:#666; margin-top:20px;'>🎉 Nenhum pedido pendente!</p>";
+                return;
+            }
+
+            pendentes.forEach(p => {
+                let itensHtml = "";
+                try {
+                    let itensArray = JSON.parse(p.resumo_itens);
+                    itensArray.forEach(item => {
+                        let prodInfo = bd.materiais.find(m => m.id === item.id) || {};
+                        let img = prodInfo.foto || 'https://via.placeholder.com/150?text=S/F';
+                        itensHtml += `
+                        <div class="item-pedido">
+                            <img src="${img}">
+                            <div class="item-desc">${item.descricao}</div>
+                            <div class="item-qtd">${item.qtd} un</div>
+                        </div>`;
+                    });
+                } catch(e) {}
+
+                html += `
+                <div class="pedido-card" id="pedido-${p.id_pedido}">
+                    <div class="pedido-header">
+                        <span>📅 ${p.data}</span>
+                        <span style="color:#f59e0b; font-weight:bold;">PENDENTE</span>
+                    </div>
+                    <div class="pedido-vendedor">👤 Vendedor: ${p.vendedor}</div>
+                    ${itensHtml}
+                    <button class="btn-sucesso" style="margin-top:10px;" onclick="marcarComoSeparado('${p.id_pedido}', '${p.telefone}')">✅ Marcar como Separado</button>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function marcarComoSeparado(idPedido, telefone) {
+            if(!confirm("Confirmar que os materiais foram separados?")) return;
+
+            mostrarLoading("Atualizando pedido...");
+            try {
+                let req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ acao: "marcar_separado", id_pedido: idPedido })
+                });
+                let res = await req.json();
+
+                if(res.sucesso) {
+                    // Remove da tela
+                    document.getElementById(`pedido-${idPedido}`).remove();
+                    
+                    // Atualiza BD local
+                    let p = bd.pedidos.find(x => x.id_pedido === idPedido);
+                    if(p) p.status = 'SEPARADO';
+                    
+                    // Dispara WhatsApp
+                    if(telefone) {
+                        let msg = `Olá! Seus materiais de Merchandising (Pedido ${idPedido}) já estão separados e prontos para retirada com o Promotor.`;
+                        let linkZap = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
+                        window.open(linkZap, '_blank');
+                    }
+                }
+            } catch(e) { alert("Erro de conexão."); }
+            ocultarLoading();
+        }
+
+        function renderizarProdutosPromotor(produtos, container) {
+            let html = "";
+            if(produtos.length === 0) html = "<p>Nenhum material nesta marca.</p>";
+            
+            produtos.forEach(p => {
+                let img = p.foto ? p.foto : 'https://via.placeholder.com/150?text=Sem+Foto';
+                html += `
+                <div class="produto-card">
+                    <img src="${img}" class="produto-img">
+                    <div class="produto-titulo">${p.descricao}</div>
+                    <div style="font-size:10px; color:#666; margin-bottom:5px;">${p.secao} • ${p.tipo}</div>
+                    <div class="produto-estoque" style="font-size:14px; color:#1a4d2e;">Estoque: <b>${p.estoque}</b></div>
+                    <button class="btn-secundario" style="margin:0; background:#fee2e2; color:#dc2626;" onclick="abrirModalSaida('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">Dar Saída Avulsa</button>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // ==========================================
+        // CADASTRO DE MATERIAL E FOTOS (PROMOTOR)
+        // ==========================================
+        function processarFoto(input) {
+            if (!input.files[0]) return; 
+            let file = input.files[0];
+            let reader = new FileReader();
+            
+            reader.onload = function(e) {
+                let img = new Image();
+                img.onload = function() {
+                    let canvas = document.createElement('canvas');
+                    let MAX_WIDTH = 800; // Comprime largura p/ economizar Drive
+                    let scaleSize = MAX_WIDTH / img.width;
+                    
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    
+                    let ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    fotoB64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    document.getElementById('preview-foto').src = fotoB64;
+                    document.getElementById('preview-foto').style.display = 'block';
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function fecharModalNovoMaterial() {
+            document.getElementById('modal-novo-material').style.display = 'none';
+            document.getElementById('novo-foto').value = '';
+            document.getElementById('preview-foto').style.display = 'none';
+            document.getElementById('novo-marca').value = '';
+            document.getElementById('novo-secao').value = '';
+            document.getElementById('novo-desc').value = '';
+            document.getElementById('novo-qtd').value = '1';
+            fotoB64 = "";
+        }
+
+        async function salvarNovoMaterial() {
+            let marca = document.getElementById('novo-marca').value.toUpperCase();
+            let secao = document.getElementById('novo-secao').value.toUpperCase();
+            let desc = document.getElementById('novo-desc').value;
+            let tipo = document.getElementById('novo-tipo').value;
+            let qtd = document.getElementById('novo-qtd').value;
+
+            if(!fotoB64) return alert("A Foto é obrigatória!");
+            if(!marca || !secao || !desc || !qtd) return alert("Preencha todos os campos!");
+
+            mostrarLoading("Salvando Imagem no Drive...");
+            let payload = {
+                acao: "salvar_material",
+                promotor: usuarioLogado.nome,
+                marca: marca,
+                secao: secao,
+                descricao: desc,
+                tipo: tipo,
+                qtd: qtd,
+                foto_b64: fotoB64
+            };
+
+            try {
+                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                let res = await req.json();
+                
+                if(res.sucesso) {
+                    alert("✅ Material cadastrado com sucesso!");
+                    fecharModalNovoMaterial();
+                    carregarDados(); // Recarrega para exibir o material
+                } else { alert("Erro: " + res.erro); }
+            } catch(e) { alert("Erro de conexão."); }
+            ocultarLoading();
+        }
+
+        function abrirModalSaida(id, desc) {
+            document.getElementById('saida-id-material').value = id;
+            document.getElementById('saida-nome-material').innerText = desc;
+            document.getElementById('saida-qtd').value = 1;
+            document.getElementById('modal-saida-manual').style.display = 'flex';
+        }
+
+        async function registrarSaidaManual() {
+            let id = document.getElementById('saida-id-material').value;
+            let qtd = document.getElementById('saida-qtd').value;
+            if(qtd <= 0) return alert("Quantidade inválida.");
+
+            document.querySelector('#modal-saida-manual .btn-principal').innerText = "Salvando...";
+            
+            let payload = {
+                acao: "saida_manual",
+                promotor: usuarioLogado.nome,
+                id_material: id,
+                qtd: qtd
+            };
+
+            try {
+                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                let res = await req.json();
+                
+                if(res.sucesso) {
+                    alert("✅ Saída registrada!");
+                    document.getElementById('modal-saida-manual').style.display = 'none';
+                    carregarDados();
+                } else { alert("Erro: " + res.erro); }
+            } catch(e) { alert("Erro de rede."); }
+            
+            document.querySelector('#modal-saida-manual .btn-principal').innerText = "Confirmar Saída";
+        }
+    </script>
 </body>
 </html>
