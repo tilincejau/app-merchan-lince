@@ -97,7 +97,7 @@
         <div class="card">
             <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" alt="Logo Lince" class="logo">
             <div class="desenvolvedor">Sistema de Solicitação de Merchan</div>
-            <h2>Acesso Restrito</h2>
+            <br>
             <input type="text" id="campo-usuario" class="input-campo" placeholder="Usuário">
             <input type="password" id="campo-senha" class="input-campo" placeholder="Senha">
             <button class="btn-principal" onclick="fazerLogin()">Acessar Sistema</button>
@@ -252,8 +252,8 @@
     </div>
 
     <script>
-        // ⚠️ ATENÇÃO: COLE O LINK DA NOVA IMPLANTAÇÃO DENTRO DAS ASPAS ABAIXO:
-        const API_URL = "https://script.google.com/macros/s/AKfycbxaplwwa6WYhrjTjcaXq8O7iA5o5abzmBnsNz1mnNoqL9_8Dx3cGak4TFYTb85W6xTq1w/exec"; 
+        // ⚠️ ATENÇÃO: COLE O LINK DO APPS SCRIPT AQUI ABAIXO:
+        const API_URL = "SEU_LINK_DO_APPS_SCRIPT_AQUI"; 
 
         let bd = { materiais: [], pedidos: [], marcas: [], secoes: [] };
         let usuarioLogado = {};
@@ -606,6 +606,7 @@
         function renderizarProdutosPromotor(produtos, container) {
             let html = "";
             if(produtos.length === 0) html = "<p>Nenhum material nesta marca.</p>";
+            
             produtos.forEach(p => {
                 let img = p.foto ? getDirectImageUrl(p.foto) : 'https://via.placeholder.com/150?text=Sem+Foto';
                 html += `<div class="produto-card"><img src="${img}" class="produto-img" onclick="abrirZoom('${img}')"><div class="produto-titulo">${p.descricao}</div><div style="font-size:10px; color:#666; margin-bottom:5px;">${p.secao} • ${p.tipo}</div><div class="produto-estoque" style="font-size:14px; color:#1a4d2e;">Estoque: <b>${p.estoque}</b></div><div style="display:flex; gap:5px; margin-top:5px;"><button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#ecfdf5; color:#10b981; font-size:11px;" onclick="abrirModalEntrada('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">➕ Entrada</button><button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#fee2e2; color:#dc2626; font-size:11px;" onclick="abrirModalSaida('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">➖ Saída</button><button class="btn-secundario" style="margin:0; padding:8px; flex:1; background:#f3f4f6; color:#374151; font-size:11px;" onclick="excluirMaterial('${p.id}', '${p.descricao.replace(/'/g, "\\'")}')">🗑️ Excluir</button></div></div>`;
